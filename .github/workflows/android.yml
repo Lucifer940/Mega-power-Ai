@@ -67,7 +67,7 @@ jobs:
           shot() {
             "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
               --window-size=1080,1920 --force-device-scale-factor=1 \
-              --virtual-time-budget=15000 \
+              --virtual-time-budget=25000 \
               --screenshot="$GITHUB_WORKSPACE/playstore/screenshots/$1.png" \
               "http://127.0.0.1:8421/index.html?$2" || true
           }

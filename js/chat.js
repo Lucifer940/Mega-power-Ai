@@ -70,8 +70,13 @@ Mega.chat.init = () => {
   const P = new URLSearchParams(location.search);
   if (P.get('open') === 'projects') setTimeout(() => Mega.drawer.open('projects'), 2600);
   if (P.get('open') === 'settings') setTimeout(() => Mega.drawer.open('settings'), 2600);
-  if (P.get('demo') === 'answer') setTimeout(() => Mega.chat.send('What can you do?'), 2600);
-  if (P.get('demo') === 'project') setTimeout(() => Mega.chat.send('build a todo app'), 2600);
+  const demoSend = (q, tries = 0) => {
+    if (Mega.chat.busy) return;
+    if (!Mega.chat.getConv() && tries < 12) return setTimeout(() => demoSend(q, tries + 1), 700);
+    Mega.chat.send(q);
+  };
+  if (P.get('demo') === 'answer') setTimeout(() => demoSend('What can you do?'), 1800);
+  if (P.get('demo') === 'project') setTimeout(() => demoSend('build a todo app'), 1800);
 };
 
 /* ---------------- conversations ---------------- */
@@ -277,7 +282,8 @@ Mega.chat.send = async (override) => {
   const raw = (override !== undefined ? override : ta.value).trim();
   if (!raw) return;
   ta.value = ''; ta.style.height = 'auto';
-  const c = Mega.chat.getConv(); if (!c) return;
+  let c = Mega.chat.getConv();
+  if (!c) { if (!Mega.chat.convs.length) Mega.chat.newConv(); c = Mega.chat.getConv(); if (!c) return; }
   if (!c.title) { c.title = raw.slice(0, 42) + (raw.length > 42 ? '…' : ''); Mega.chat.renderList(); }
   c.msgs.push({ role: 'user', content: raw });
   Mega.chat.renderMsgs();
