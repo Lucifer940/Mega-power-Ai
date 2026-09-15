@@ -282,7 +282,7 @@ Mega.studio.genVideo = async () => {
 /* ================= VOICE ================= */
 Mega.studio.speak = () => {
   const text = Mega.$('#voiceText').value.trim();
-  if (!text) return Mega.toast('Write something', 'I will narrate any text in any language 🗣', 'warn');
+  if (!text) return Mega.toast('Write something', 'I will narrate any text aloud 🗣', 'warn');
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   const vs = speechSynthesis.getVoices();

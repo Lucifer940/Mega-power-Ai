@@ -95,7 +95,7 @@ Mega.projects.del = async (p) => {
 /* ---------------- wizard (feature 18: choose destination) ---------------- */
 Mega.projects.wizard = () => {
   Mega.modal('📁 New project', 'One prompt is enough. Choose where Mega Power AI should create it.',
-    `<label class="lbl">DESCRIBE YOUR PROJECT — ANY LANGUAGE</label>
+    `<label class="lbl">DESCRIBE YOUR PROJECT</label>
      <textarea class="inp" id="wzPrompt" rows="3" placeholder="e.g. a beautiful expense tracker with charts and dark mode"></textarea>
      <label class="lbl">CREATE IT…</label>
      <div class="grid3" id="wzDest" style="gap:9px">

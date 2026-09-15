@@ -152,7 +152,7 @@ Mega._route = () => {
   window.scrollTo(0, 0);
 };
 Mega.titles = { chat: 'AI Chat', code: 'Code Studio', studio: 'Create Studio', projects: 'My Projects', github: 'GitHub Connect', cmd: 'Mega CMD', settings: 'Settings', about: 'About' };
-Mega.subs = { chat: 'Ask anything — any language, no limits', code: 'One prompt → a complete, checked project', studio: 'Image • Video • Voice generators', projects: 'Folders, jobs & one-click download', github: 'Create or push projects to your repos', cmd: 'One command builds anything', settings: 'Models, keys, theme & data', about: 'The story of Mega Power AI' };
+Mega.subs = { chat: 'Ask anything — instant answers, no limits', code: 'One prompt → a complete, checked project', studio: 'Image • Video • Voice generators', projects: 'Folders, jobs & one-click download', github: 'Create or push projects to your repos', cmd: 'One command builds anything', settings: 'Models, keys, theme & data', about: 'The story of Mega Power AI' };
 
 /* ---------------- online status ---------------- */
 Mega.setOnline = () => {
@@ -192,6 +192,8 @@ Mega.boot = () => {
   setTimeout(() => Mega.$('#splash')?.classList.add('hide'), 1750);
   // resume background jobs after reopen ("never forget your project")
   if (Mega.jobsResume) setTimeout(() => Mega.jobsResume(), 900);
-  if (!Mega.user) setTimeout(() => { if (!Mega.store.get('seenAuth')) Mega.authOpen(); }, 2200);
+  const noAuth = new URLSearchParams(location.search).has('noauth');
+  if (noAuth) Mega.store.set('seenAuth', true);
+  if (!Mega.user && !noAuth) setTimeout(() => { if (!Mega.store.get('seenAuth')) Mega.authOpen(); }, 2200);
 };
 document.addEventListener('DOMContentLoaded', Mega.boot);

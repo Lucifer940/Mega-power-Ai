@@ -89,7 +89,7 @@ Mega.cmd.run = async (raw) => {
     }
     else if (c === 'clear') { out.innerHTML = ''; }
     else if (c === 'about') {
-      Mega.cmd.printMD('**⚡ MEGA POWER AI** — created by **Umesh Chaudhary**\n\nThe world\'s fastest and most powerful AI platform — no limits, no issues. Understands any language. Tell it your ideas — it makes them real.\n\n🔒 *Secret project* · Works as web + installable app (Android, iOS, Windows, Linux).');
+      Mega.cmd.printMD('**⚡ MEGA POWER AI** — created by **Umesh Chaudhary**\n\nThe world\'s fastest and most powerful AI platform — no limits, no issues. Tell it your ideas — it makes them real.\n\n🔒 *Secret project* · Works as web + installable app (Android, iOS, Windows, Linux).');
     }
     else if (c === 'time') Mega.cmd.print([[new Date().toString(), 'tl-ok']]);
     else if (c === 'whoami') Mega.cmd.print([[Mega.user ? `${Mega.user.name} (${Mega.user.email}) via ${Mega.user.via}` : 'guest — not logged in', 'tl-ok']]);
@@ -164,7 +164,7 @@ Mega.cmd.run = async (raw) => {
     else if (c === 'logout') { Mega.setUser(null); Mega.cmd.print([['logged out.', 'tl-ok']]); }
     else if (c === 'install') { Mega.installApp(); }
     else if (c === 'matrix') {
-      const chars = '01アイウエオカキクケコ⚡';
+      const chars = '01MEGApowerAI0101⚡';
       let n = 0;
       const iv = setInterval(() => {
         Mega.cmd.print([[Array.from({ length: 62 }, () => chars[Math.floor(Math.random() * chars.length)]).join(''), 'tl-ok']]);

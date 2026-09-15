@@ -83,12 +83,12 @@ Mega.chat.renderMsgs = () => {
     <div class="chat-hero">
       <div class="hl">${Mega.logoSVG('hl')}</div>
       <h2>What should we build today?<br>Anything. No limits. ⚡</h2>
-      <p>Ask anything in any language — or pick a starter:</p>
+      <p>Ask anything — instant answers, no limits. Pick a starter:</p>
       <div class="sugs">
         <div class="sug" data-q="Make a beautiful todo app with dark mode"><b>🧑‍💻 Build an app</b>“Make a beautiful todo app with dark mode”</div>
         <div class="sug" data-q="Explain how JavaScript promises work with examples"><b>📚 Learn something</b>“Explain JavaScript promises with examples”</div>
         <div class="sug" data-q="Write a Python script that renames all files in a folder by date"><b>🐍 Write a script</b>“Python script to rename files by date”</div>
-        <div class="sug" data-q="मुझे एक प्यारा बर्थडे कार्ड वेबपेज बनाकर दो"><b>🌏 Any language</b>“मुझे एक प्यारा बर्थडे कार्ड वेबपेज बनाकर दो”</div>
+        <div class="sug" data-q="Design a cute animated birthday card webpage"><b>🎨 Create something fun</b>“Design a cute animated birthday card webpage”</div>
       </div>
     </div>`;
     Mega.$$('.sug', box).forEach(s => s.onclick = () => { Mega.$('#chatInput').value = s.dataset.q; Mega.chat.send(); });

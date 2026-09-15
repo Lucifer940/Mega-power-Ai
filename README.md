@@ -5,7 +5,22 @@
 >
 > Created by **Umesh Chaudhary** 👑 · 🔒 *Secret project* · 100% free
 
-One codebase that is a **website**, an **installable app** (Android · iOS · Windows · Linux · macOS) **and a CMD-box terminal** — with AI chat, one-prompt app generation, image/video/voice studios, background build jobs and real GitHub integration.
+One codebase that is a **website**, an **Android app (APK + Play Store AAB)**, an **installable app** (Android · iOS · Windows · Linux · macOS) **and a CMD-box terminal** — with AI chat, one-prompt app generation, image/video/voice studios, background build jobs and real GitHub integration.
+
+---
+
+## 📱 Android app — APK + Play Store
+
+**Get the built files** → GitHub **Releases** → `android-v1.0`: signed **APK** (install directly), **AAB** (upload to Google Play) and **real Play Store screenshots**. Built automatically by [GitHub Actions](.github/workflows/android.yml) with the official Android toolchain.
+
+| | |
+|---|---|
+| **Install directly (any Android 7+)** | download `Mega-Power-AI-v1.0.apk` from Releases → open it → allow "Install unknown apps" → Install ⚡ |
+| **Publish on Google Play** | follow **`playstore/upload-guide.md`** — step-by-step, ~1 hour. Listing copy: `playstore/store-listing.md` · Data safety answers: `playstore/data-safety.md` · Privacy policy: `privacy-policy.html` |
+| **Rebuild after changes** | push to the repo — CI rebuilds APK + AAB + screenshots automatically. Bump `versionCode` in `android/app/build.gradle` for each Play upload |
+| **Build locally** | `bash android/sync-assets.sh && cd android && gradle assembleRelease bundleRelease` (or open `android/` in Android Studio) |
+
+The Android app bundles the **entire web app inside the APK** (works offline, no server needed) and serves it on a proper `https://` origin via WebViewAssetLoader — so chats, projects, service worker and AI calls behave exactly like the website. Signing keystore: `android/mega-power-ai-release.jks` (passwords in `android/app/build.gradle` — replace with your own keystore for production if you prefer).
 
 ---
 
@@ -108,6 +123,10 @@ js/projects.js        projects + background jobs
 js/github.js          GitHub REST integration
 js/cmd.js             Mega CMD terminal
 js/settings.js        settings
+android/              native Android app (WebView shell, gradle, signing)
+playstore/            Google Play kit: listing, data safety, graphics, guide
+android/              native Android app (WebView shell, gradle, signing)
+playstore/            Google Play kit: listing, data safety, graphics, guide
 install/              installers (Windows CMD box, Linux, macOS)
 server.js             tiny Node server (fallback)
 ```

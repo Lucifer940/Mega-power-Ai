@@ -60,7 +60,7 @@ Mega.authOpen = () => {
     <img class="auth-logo" src="assets/icons/icon-192.png" alt="Mega Power AI">
     <div style="text-align:center">
       <div style="font-size:23px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">MEGA POWER AI</div>
-      <div style="font-size:11px;letter-spacing:.3em;color:var(--text2);font-weight:700;margin-top:4px">NO LIMITS · ANY LANGUAGE · FREE</div>
+      <div style="font-size:11px;letter-spacing:.3em;color:var(--text2);font-weight:700;margin-top:4px">NO LIMITS · FREE · FOREVER</div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab on" data-t="login">Log in</button>
