@@ -3,13 +3,13 @@
    App shell cached; AI APIs pass through untouched.
    ============================================================ */
 'use strict';
-const CACHE = 'megapowerai-v1';
+const CACHE = 'megapowerai-v2';
 const SHELL = [
   './', './index.html', './manifest.json',
   './css/style.css',
   './js/core.js', './js/md.js', './js/zip.js', './js/ai.js', './js/auth.js',
-  './js/chat.js', './js/code.js', './js/studio.js', './js/projects.js',
-  './js/github.js', './js/cmd.js', './js/settings.js',
+  './js/media.js', './js/chat.js', './js/code.js', './js/projects.js',
+  './js/github.js', './js/settings.js',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png',
   './assets/icons/apple-touch-icon.png', './assets/icons/favicon.png'
 ];

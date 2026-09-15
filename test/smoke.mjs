@@ -21,6 +21,27 @@ load('md.js');
 load('zip.js');
 load('ai.js');
 load('code.js');
+load('media.js');
+load('projects.js');
+load('chat.js');
+load('settings.js');
+
+/* ---- v1.1 modules present ---- */
+{
+  t('media: video presets', typeof Mega.media.videoPresets === 'object' && Object.keys(Mega.media.videoPresets).length >= 3);
+  t('media: scene builder', typeof Mega.media.scenes === 'function' && Array.isArray(Mega.media.scenes('a rocket launch at sunrise', 15)));
+  t('media: resolution key is videoResolution', 'videoResolution' in Mega.settings, 'keys=' + Object.keys(Mega.settings).join(','));
+  t('chat: engine api surface', ['send','route','regen','stop','handleBuild','runSuggestion'].every(k => typeof Mega.chat[k] === 'function'), Object.keys(Mega.chat).join(','));
+  t('projects: api surface', ['save','updateFiles','remove','render','zip','init'].every(k => typeof Mega.projects[k] === 'function'));
+  t('settings: defaults for all v1.1 features', ['searchMode','imageEngine','imageStyle','imageSize','imageCount','videoDuration','videoResolution','videoFps','videoMusic','sysPrompt','suggest'].every(k => k in Mega.settings));
+  t('ai: intent router', typeof Mega.ai.intent === 'function');
+  const it = Mega.ai.intent('draw a poster of a lion');
+  t('ai: intent detects image', it && it.type === 'image', JSON.stringify(it));
+  const it2 = Mega.ai.intent('build me a todo app');
+  t('ai: intent detects build', it2 && it2.type === 'build', JSON.stringify(it2));
+  t('ai: suggest returns chips', Array.isArray(Mega.ai.suggest('What is AI?', 'text')));
+}
+
 
 /* ---- markdown ---- */
 {

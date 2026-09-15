@@ -1,5 +1,5 @@
 /* ============================================================
-   MEGA POWER AI — core.js  |  state, storage, router, helpers
+   MEGA POWER AI — core.js  |  state, storage, helpers, boot
    Created by Umesh Chaudhary
    ============================================================ */
 'use strict';
@@ -47,6 +47,8 @@ Mega.icon = (n) => {
     save:'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8',
     file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
     globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z',
+    search:'M21 21l-4.3-4.3M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z',
+    menu:'M4 6h16M4 12h16M4 18h16',
     arrowl:'M19 12H5m0 0 6-6m-6 6 6 6'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n] || P.info}"/></svg>`;
@@ -61,9 +63,25 @@ Mega.store = {
 };
 
 Mega.settings = Object.assign({
-  provider: 'mega', model: 'mega-openai',
-  keys: {}, theme: 'dark', accent: 0, anim: true, turbo: true, autocorrect: true,
-  fontScale: 1, lastProject: null, ghToken: ''
+  model: 'mega-openai',
+  sysPrompt: '',
+  turbo: true,
+  suggest: true,
+  keys: {},
+  searchMode: 'smart',            // smart | always | off
+  imageEngine: 'auto',            // auto | free | openai
+  imageStyle: 'auto',
+  imageSize: '1024x1024',
+  imageCount: 2,
+  videoDuration: 'standard',      // short | standard | long
+  videoResolution: '1280x720',
+  videoFps: 30,
+  videoMusic: true,
+  theme: 'dark',
+  accent: 0,
+  anim: true,
+  fontScale: 1,
+  ghToken: ''
 }, Mega.store.get('settings', {}));
 Mega.saveSettings = () => Mega.store.set('settings', Mega.settings);
 
@@ -75,7 +93,7 @@ Mega.applyTheme = () => {
   document.documentElement.style.setProperty('--acc2', A[1]);
 };
 
-/* ---------------- IndexedDB (projects, files, images, convs, jobs) ---------------- */
+/* ---------------- IndexedDB (kv: projects, files, convs, videos) ---------------- */
 Mega.idb = (() => {
   let db = null;
   const open = () => new Promise((res, rej) => {
@@ -94,7 +112,7 @@ Mega.idb = (() => {
     async set(store, key, val) { const s = await tx(store, 'readwrite'); return new Promise((res, rej) => { const q = s.put(val, key); q.onsuccess = () => res(key); q.onerror = () => rej(q.error); }); },
     async del(store, key) { const s = await tx(store, 'readwrite'); return new Promise((res, rej) => { const q = s.delete(key); q.onsuccess = () => res(); q.onerror = () => rej(q.error); }); },
     async keys(store) { const s = await tx(store, 'readonly'); return new Promise((res, rej) => { const q = s.getAllKeys(); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
-    async all(store) { const s = await tx(store, 'readonly'); return new Promise((res, rej) => { const q = s.getAll(); q.onsuccess = () => { const ks = q.result; res(ks); }; q.onerror = () => rej(q.error); }); }
+    async all(store) { const s = await tx(store, 'readonly'); return new Promise((res, rej) => { const q = s.getAll(); q.onsuccess = () => { const ks = q.result; res(ks); }; q.onerror = () => rej(q.error); }) }
   };
 })();
 
@@ -134,26 +152,6 @@ Mega.confirm = (title, msg, danger = true) => new Promise((res) => {
     { onMount(w, close) { w.onclick = (e) => { if (e.target.dataset.a) close(e.target.dataset.a === 'yes'); }; } });
 });
 
-/* ---------------- router ---------------- */
-Mega.routes = {};
-Mega.go = (name) => {
-  location.hash = '#/' + name;
-};
-Mega._route = () => {
-  const name = (location.hash.replace(/^#\//, '') || 'chat').split('?')[0];
-  const page = Mega.$('#page-' + name) ? name : 'chat';
-  Mega.$$('.page').forEach(p => p.classList.remove('active'));
-  Mega.$('#page-' + page).classList.add('active');
-  Mega.$$('.nav-item[data-route]').forEach(n => n.classList.toggle('active', n.dataset.route === page));
-  Mega.$$('.mnav[data-route]').forEach(n => n.classList.toggle('active', n.dataset.route === page));
-  const t = Mega.$('#tbTitle .tt'); if (t) t.textContent = (Mega.titles[page] || page);
-  const s = Mega.$('#tbTitle .sub'); if (s) s.textContent = (Mega.subs[page] || '');
-  if (Mega.routes[page]) Mega.routes[page]();
-  window.scrollTo(0, 0);
-};
-Mega.titles = { chat: 'AI Chat', code: 'Code Studio', studio: 'Create Studio', projects: 'My Projects', github: 'GitHub Connect', cmd: 'Mega CMD', settings: 'Settings', about: 'About' };
-Mega.subs = { chat: 'Ask anything — instant answers, no limits', code: 'One prompt → a complete, checked project', studio: 'Image • Video • Voice generators', projects: 'Folders, jobs & one-click download', github: 'Create or push projects to your repos', cmd: 'One command builds anything', settings: 'Models, keys, theme & data', about: 'The story of Mega Power AI' };
-
 /* ---------------- online status ---------------- */
 Mega.setOnline = () => {
   const chip = Mega.$('#netChip'); if (!chip) return;
@@ -172,8 +170,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 Mega.installApp = async () => {
   if (Mega._installEvt) { Mega._installEvt.prompt(); const r = await Mega._installEvt.userChoice; Mega._installEvt = null; Mega.$('#installBtn')?.classList.remove('show'); if (r.outcome === 'accepted') Mega.toast('App installed!', 'Mega Power AI is now on your device.', 'ok'); }
   else Mega.modal('📲 Install Mega Power AI', 'Install this app on any device — Android, iOS, Windows, Linux or macOS.',
-    `<div class="card" style="margin-bottom:10px"><b>🖥️ Windows / Linux / macOS (Chrome or Edge)</b><div style="color:var(--text2);font-size:13px;margin-top:6px">Click the <b>install icon (⊕)</b> in the address bar, or Menu → <b>Install app</b>. A desktop window + Start-menu entry appears. Windows users can also run <code>install/install-windows.cmd</code> for the CMD-box mode.</div></div>
-     <div class="card" style="margin-bottom:10px"><b>🤖 Android</b><div style="color:var(--text2);font-size:13px;margin-top:6px">Chrome menu (⋮) → <b>Install app</b> / Add to Home screen.</div></div>
+    `<div class="card" style="margin-bottom:10px"><b>🖥️ Windows / Linux / macOS (Chrome or Edge)</b><div style="color:var(--text2);font-size:13px;margin-top:6px">Click the <b>install icon (⊕)</b> in the address bar, or Menu → <b>Install app</b>. A desktop window + Start-menu entry appears.</div></div>
+     <div class="card" style="margin-bottom:10px"><b>🤖 Android</b><div style="color:var(--text2);font-size:13px;margin-top:6px">Chrome menu (⋮) → <b>Install app</b> / Add to Home screen — or install the official <b>Mega Power AI APK</b>.</div></div>
      <div class="card"><b>🍎 iOS</b><div style="color:var(--text2);font-size:13px;margin-top:6px">Safari → Share (⬆️) → <b>Add to Home Screen</b>.</div></div>
      <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="this.closest('.modal-wrap')._close(null)">Got it</button></div>`);
 };
@@ -182,16 +180,12 @@ Mega.installApp = async () => {
 Mega.user = Mega.store.get('user', null);
 Mega.setUser = (u) => { Mega.user = u; Mega.store.set('user', u); if (Mega.authRender) Mega.authRender(); };
 
-/* ---------------- boot ---------------- */
+/* ---------------- boot (single chat app) ---------------- */
 Mega.boot = () => {
   Mega.applyTheme();
   Mega.setOnline();
-  window.addEventListener('hashchange', Mega._route);
-  Mega._route();
-  const app = Mega.$('#app'); app.classList.add('ready');
+  const app = Mega.$('#app'); if (app) app.classList.add('ready');
   setTimeout(() => Mega.$('#splash')?.classList.add('hide'), 1750);
-  // resume background jobs after reopen ("never forget your project")
-  if (Mega.jobsResume) setTimeout(() => Mega.jobsResume(), 900);
   const noAuth = new URLSearchParams(location.search).has('noauth');
   if (noAuth) Mega.store.set('seenAuth', true);
   if (!Mega.user && !noAuth) setTimeout(() => { if (!Mega.store.get('seenAuth')) Mega.authOpen(); }, 2200);

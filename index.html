@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mega Power AI ⚡ — No Limits. Any Language. Free.</title>
-<meta name="description" content="Mega Power AI — the world's fastest, most powerful AI platform. Chat, build apps from one prompt, generate images & videos, connect GitHub. Created by Umesh Chaudhary.">
+<title>Mega Power AI ⚡ — One box. Everything. No limits.</title>
+<meta name="description" content="Mega Power AI — one chat box that does everything: chat like ChatGPT, build apps from one prompt, professional posters & images, real videos, live web search. Created by Umesh Chaudhary.">
 <meta name="theme-color" content="#070b18">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="assets/icons/favicon.png">
@@ -17,389 +17,102 @@
 </head>
 <body>
 
-<!-- animated background -->
 <div id="bgFx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="grid"></div></div>
 
-<!-- boot splash -->
 <div id="splash">
   <div class="splash-logo"><svg viewBox="0 0 96 96" width="110" height="110"><defs><linearGradient id="slg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5dfc"/><stop offset="1" stop-color="#35e0ff"/></linearGradient></defs><rect x="4" y="4" width="88" height="88" rx="24" fill="url(#slg)"/><path d="M54 14 26 54h17l-3 28 30-42H52z" fill="#fff"/></svg></div>
   <h1>MEGA POWER AI</h1>
-  <p>NO LIMITS · 4X FASTER · FREE · FOREVER</p>
+  <p>ONE BOX · EVERYTHING · NO LIMITS</p>
   <div class="splash-bar"><i></i></div>
 </div>
 
 <div id="app">
-  <!-- ======================= SIDEBAR ======================= -->
+  <!-- ================= SIDEBAR ================= -->
   <aside id="sidebar">
-    <div class="brand" onclick="Mega.go('chat')">
+    <div class="brand" onclick="Mega.chat.newConv()">
       <img src="assets/icons/icon-192.png" alt="">
       <div class="bt">Mega Power AI<small>NO LIMITS ⚡</small></div>
     </div>
-    <div class="nav-sec">Create</div>
-    <div class="nav-item" data-route="chat"><span class="ic"></span>AI Chat</div>
-    <div class="nav-item" data-route="code"><span class="ic"></span>Code Studio</div>
-    <div class="nav-item" data-route="studio"><span class="ic"></span>Create Studio</div>
+    <button class="btn primary" id="chatNewBtn" style="margin:0 6px 10px">＋ New chat</button>
+    <div class="nav-sec">Chats</div>
+    <div id="chatList" style="flex:1;overflow:auto;padding:0 6px;min-height:0"></div>
     <div class="nav-sec">Workspace</div>
-    <div class="nav-item" data-route="projects"><span class="ic"></span>My Projects</div>
-    <div class="nav-item" data-route="github"><span class="ic"></span>GitHub Connect</div>
-    <div class="nav-item" data-route="cmd"><span class="ic"></span>Mega CMD</div>
-    <div class="nav-sec">System</div>
-    <div class="nav-item" data-route="settings"><span class="ic"></span>Settings</div>
-    <div class="nav-item" data-route="about"><span class="ic"></span>About</div>
+    <div class="nav-item" id="navProjects"><span class="ic"></span>My Projects</div>
+    <div class="nav-item" id="navSettings"><span class="ic"></span>Settings</div>
     <button id="installBtn" onclick="Mega.installApp()">📲 Install app</button>
-    <div id="sbUser" onclick="Mega.user ? Mega.authOpen() : Mega.authOpen()"></div>
+    <div id="sbUser"></div>
   </aside>
 
-  <!-- ======================= MAIN ======================= -->
+  <!-- ================= MAIN ================= -->
   <div id="main">
     <header id="topbar">
-      <div id="tbTitle"><span class="tt">AI Chat</span><span class="sub">Ask anything — instant answers, no limits</span></div>
+      <button class="btn sm ghost only-m" id="chatConvBtn">☰</button>
+      <div id="tbTitle"><span class="tt">Mega Power AI</span><span class="sub">one box · everything · no limits</span></div>
       <div class="tb-right">
-        <span class="chip" id="netChip"><span class="dot"></span><span class="netl">Online</span></span>
+        <span class="chip hide-m" id="netChip"><span class="dot"></span><span class="netl">Online</span></span>
+        <button class="btn sm ghost" id="themeQuick" title="Toggle dark / light">🌙</button>
         <div class="model-pick">
           <button class="model-btn" id="modelBtn"><span class="mi">M</span><span id="modelBtnName">MegaAI Core</span><span style="font-size:10px">▾</span></button>
           <div class="model-menu" id="modelMenu">
-            <input class="mm-search" id="mmSearch" placeholder="Search 25+ models…">
+            <input class="mm-search" id="mmSearch" placeholder="Search models — gpt, gemini, claude…">
             <div id="mmList"></div>
           </div>
         </div>
       </div>
     </header>
 
-    <div id="pages">
-
-      <!-- ================= CHAT ================= -->
-      <section class="page" id="page-chat">
-        <div class="chat-side">
-          <div class="cs-head">
-            <button class="btn primary" id="chatNewBtn" style="width:100%">＋ New chat</button>
-          </div>
-          <div id="chatList"></div>
+    <div id="chatWrap">
+      <div id="chatMsgs"></div>
+      <div class="chat-input-wrap">
+        <div class="row" id="cmdChips">
+          <button class="chipbtn" data-cmd="/image ">🖼 Image</button>
+          <button class="chipbtn" data-cmd="/video ">🎬 Video</button>
+          <button class="chipbtn" data-cmd="/build ">🧑‍💻 Build</button>
+          <button class="chipbtn" data-cmd="/search ">🔍 Search</button>
+          <button class="chipbtn" data-cmd="/help">✨ Help</button>
         </div>
-        <div class="chat-main">
-          <button class="btn sm only-m" id="chatConvBtn" style="position:absolute;top:10px;left:10px;z-index:8">🕘 Chats</button>
-          <div id="chatMsgs"></div>
-          <div class="chat-input-wrap">
-            <div class="chat-input">
-              <textarea id="chatInput" rows="1" placeholder="Ask anything… ⚡"></textarea>
-              <button class="send-btn" id="chatSend" title="Send"></button>
-            </div>
-            <div class="chat-note">Mega Power AI · free & unlimited · created by Umesh Chaudhary · Enter ↵ send · Shift+Enter newline</div>
-          </div>
+        <div class="chat-input">
+          <textarea id="chatInput" rows="1" placeholder="Ask anything… make a poster, build an app, search the web ⚡"></textarea>
+          <button class="send-btn" id="chatSend" title="Send"></button>
         </div>
-      </section>
-
-      <!-- ================= CODE STUDIO ================= -->
-      <section class="page" id="page-code">
-        <div class="cs-prompt">
-          <textarea id="csPrompt" placeholder="Describe ANY project in one line…&#10;e.g. “a beautiful expense tracker with charts and dark mode”"></textarea>
-          <button class="btn primary" id="csGen" style="height:64px">⚡ Generate</button>
-        </div>
-        <div id="csGenOut" style="display:none;margin-top:14px"></div>
-        <div class="cs-grid">
-          <div class="card cs-files">
-            <div class="row"><b style="font-size:14px">🗂 Files</b><input class="inp" id="csName" placeholder="project-name" style="max-width:110px;padding:6px 10px;font-size:12px;margin-left:auto"></div>
-            <div class="cs-filetree" id="csTree"></div>
-          </div>
-          <div class="card cs-editor-card">
-            <div class="row">
-              <b style="font-size:14px" id="csFileName">editor</b>
-              <div class="row" style="margin-left:auto;gap:6px">
-                <button class="btn sm" id="csCodeBtn">📝 Code</button>
-                <button class="btn sm" id="csPreviewBtn">▶ Preview</button>
-              </div>
-            </div>
-            <div class="editor-wrap">
-              <div id="csGutter" style="position:absolute;left:0;top:0;bottom:0;width:44px;overflow:hidden;padding:14px 8px 14px 0;text-align:right;color:#5c6a91;font-family:var(--mono);font-size:13px;line-height:1.65;border-right:1px solid rgba(255,255,255,.06);user-select:none;background:rgba(255,255,255,.02)"></div>
-              <textarea id="csEditor" spellcheck="false"></textarea>
-              <iframe id="csPreview" style="display:none" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
-            </div>
-          </div>
-          <div class="card cs-preview-col" style="display:flex;flex-direction:column">
-            <div class="row" style="flex-wrap:wrap">
-              <b style="font-size:14px">✅ Auto code check</b>
-              <div class="row" style="margin-left:auto;gap:6px">
-                <button class="btn sm" id="csCheck">🔍 Check</button>
-                <button class="btn sm primary" id="csFix">🔧 Auto-fix</button>
-              </div>
-            </div>
-            <div id="csIssues" style="margin-top:12px;overflow:auto"><p style="color:var(--text3);font-size:12.5px;padding:8px">Generate a project — every file gets checked automatically (real syntax check + smart review).</p></div>
-            <div class="row" id="csActs" style="margin-top:auto;padding-top:14px;flex-wrap:wrap;gap:8px;display:none">
-              <span style="font-size:12px;color:var(--text2);font-weight:700">Create it in →</span>
-              <button class="btn sm" id="csSave">📁 My Projects</button>
-              <button class="btn sm" id="csZip">📦 Download ZIP</button>
-              <button class="btn sm" id="csGh">🐙 GitHub</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= CREATE STUDIO ================= -->
-      <section class="page" id="page-studio">
-        <div class="st-tabs">
-          <div class="st-slider"></div>
-          <button class="st-tab" data-tab="image"><span class="ic"></span>🖼 Image</button>
-          <button class="st-tab" data-tab="video"><span class="ic"></span>🎬 Video</button>
-          <button class="st-tab" data-tab="voice"><span class="ic"></span>🗣 Voice</button>
-        </div>
-
-        <!-- IMAGE -->
-        <div class="st-panel" data-panel="image">
-          <div class="st-grid">
-            <div class="card">
-              <label class="lbl">DESCRIBE YOUR IMAGE</label>
-              <textarea class="inp" id="imgPrompt" rows="3" placeholder="a neon cyber city at night, rain, reflections…"></textarea>
-              <label class="lbl">STYLE</label>
-              <select class="inp" id="imgStyle">
-                <option value="">🎨 No style (pure prompt)</option>
-                <option value="realistic">📷 Realistic photo</option>
-                <option value="anime">🌸 Anime</option>
-                <option value="3d">🧊 3D render</option>
-                <option value="digital">🖌 Digital art</option>
-                <option value="cyberpunk">🌃 Cyberpunk</option>
-                <option value="watercolor">💧 Watercolor</option>
-                <option value="minimal">⬜ Minimal vector</option>
-                <option value="logo">✳️ Logo</option>
-              </select>
-              <div class="grid2" style="margin-top:4px">
-                <div><label class="lbl">SIZE</label>
-                  <select class="inp" id="imgAspect"><option value="1:1">1:1 square</option><option value="16:9">16:9 wide</option><option value="9:16">9:16 story</option><option value="4:3">4:3 classic</option></select></div>
-                <div><label class="lbl">COUNT</label>
-                  <select class="inp" id="imgCount"><option>1</option><option>2</option><option selected>4</option></select></div>
-              </div>
-              <div class="grid2">
-                <div><label class="lbl">ENGINE</label>
-                  <select class="inp" id="imgModel"><option value="flux">Flux — best quality</option><option value="turbo">Turbo — fastest</option></select></div>
-                <div><label class="lbl">AI ENHANCE</label>
-                  <label class="switch" style="margin-top:9px"><input type="checkbox" id="imgEnhance" checked><i></i></label></div>
-              </div>
-              <button class="btn primary" id="imgGen" style="width:100%;margin-top:18px">✨ Generate images</button>
-              <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">100% free, no API key. The free engine politely queues requests so nobody is blocked — “no limit” means you never hit a paywall here.</p>
-            </div>
-            <div class="img-gallery" id="imgGallery"></div>
-          </div>
-        </div>
-
-        <!-- VIDEO -->
-        <div class="st-panel" data-panel="video">
-          <div class="st-grid">
-            <div class="card">
-              <label class="lbl">VIDEO TITLE</label>
-              <input class="inp" id="vidTitle" placeholder="My AI Video">
-              <label class="lbl">SCENES — ONE PER LINE (max 8)</label>
-              <textarea class="inp" id="vidScenes" rows="4" placeholder="a rocket launching at sunset&#10;Earth seen from orbit&#10;stars and galaxies swirling"></textarea>
-              <div class="grid2">
-                <div><label class="lbl">STYLE</label>
-                  <select class="inp" id="vidStyle"><option value="cinematic">🎞 Cinematic</option><option value="realistic">📷 Realistic</option><option value="anime">🌸 Anime</option><option value="3d">🧊 3D</option><option value="digital">🖌 Digital art</option></select></div>
-                <div><label class="lbl">SECONDS / SCENE</label>
-                  <select class="inp" id="vidSec"><option>2</option><option selected>3</option><option>4</option><option>6</option></select></div>
-              </div>
-              <div class="grid2">
-                <div><label class="lbl">RESOLUTION</label>
-                  <select class="inp" id="vidRes"><option value="854x480">480p</option><option value="1280x720" selected>720p</option><option value="1920x1080">1080p</option></select></div>
-                <div><label class="lbl">FPS</label>
-                  <select class="inp" id="vidFps"><option>24</option><option selected>30</option></select></div>
-              </div>
-              <div class="set-row" style="margin-top:10px;padding:10px 12px">
-                <div class="si">🎵</div><div class="grow"><div class="st">Ambient music</div><div class="sd">Auto-generated soundtrack</div></div>
-                <label class="switch"><input type="checkbox" id="vidMusic" checked><i></i></label>
-              </div>
-              <div class="row" style="margin-top:14px">
-                <button class="btn primary grow" id="vidGen">🎬 Generate video</button>
-                <button class="btn danger" id="vidCancel">⏹ Cancel</button>
-              </div>
-            </div>
-            <div class="card" id="vidOut" style="display:none">
-              <div class="row" style="justify-content:space-between"><span class="js" id="vidStat">queued…</span></div>
-              <div class="progress" style="margin-top:10px"><i id="vidBar"></i></div>
-              <div class="video-out" style="margin-top:14px"></div>
-              <p style="font-size:11px;color:var(--text3);margin-top:10px">AI paints every scene → a real video file is encoded right in your browser (webm). Scenes, transitions, Ken-Burns motion, titles & music — all automatic.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- VOICE -->
-        <div class="st-panel" data-panel="voice">
-          <div class="st-grid">
-            <div class="card">
-              <label class="lbl">TEXT TO SPEAK</label>
-              <textarea class="inp" id="voiceText" rows="5" placeholder="Type any text and I will speak it aloud…">Welcome to Mega Power AI — the world's fastest AI platform. Created by Umesh Chaudhary.</textarea>
-              <label class="lbl">VOICE</label>
-              <select class="inp" id="voiceSel"><option>Loading voices…</option></select>
-              <label class="lbl">SPEED — <span id="rateVal">1</span>×</label>
-              <input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1" style="width:100%">
-              <label class="lbl">PITCH — <span id="pitchVal">1</span></label>
-              <input type="range" id="voicePitch" min="0" max="2" step="0.1" value="1" style="width:100%">
-              <label class="lbl">VOLUME</label>
-              <input type="range" id="voiceVol" min="0" max="1" step="0.1" value="1" style="width:100%">
-              <div class="row" style="flex-wrap:wrap;margin-top:14px;gap:7px">
-                <button class="btn sm" data-vpreset="0.9,1">📖 Narrator</button>
-                <button class="btn sm" data-vpreset="1.3,1.4">🎉 Excited</button>
-                <button class="btn sm" data-vpreset="0.7,0.8">😌 Calm</button>
-                <button class="btn sm" data-vpreset="1.5,1.9">⚡ Hype</button>
-              </div>
-              <div class="row" style="margin-top:14px">
-                <button class="btn primary grow" id="voicePlay">🗣 Speak</button>
-                <button class="btn" id="voiceStop">⏹ Stop</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="empty" style="padding:30px"><div class="big">🗣️</div>
-                <b>AI Voice Studio</b>
-                <span style="font-size:13px;line-height:1.7;max-width:380px">Turn any text into natural speech with the voices on your device — pick a voice, tune speed &amp; pitch, choose a style preset. Perfect for narrations, videos and learning pronunciation.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= PROJECTS ================= -->
-      <section class="page" id="page-projects">
-        <div class="card" style="margin-bottom:18px">
-          <div class="row"><b>⚙️ Background jobs</b><span class="pill">never forget a project — jobs auto-resume</span></div>
-          <div id="jobList" style="margin-top:12px"><div style="color:var(--text3);font-size:12.5px">No active jobs. Start one below or type <b>build &lt;anything&gt;</b> in Mega CMD.</div></div>
-        </div>
-        <div class="row" style="margin-bottom:16px">
-          <h2 style="font-size:20px;font-weight:800">📁 My Projects</h2>
-          <button class="btn primary" id="projNew" style="margin-left:auto">＋ New project</button>
-        </div>
-        <div class="grid4" id="projGrid"></div>
-      </section>
-
-      <!-- ================= GITHUB ================= -->
-      <section class="page" id="page-github">
-        <div class="row" style="margin-bottom:16px">
-          <h2 style="font-size:20px;font-weight:800">🐙 GitHub Connect</h2>
-          <span class="pill" style="margin-left:12px">like LMArena — pick a repo or create one</span>
-          <button class="btn sm" id="ghRefresh" style="margin-left:auto">🔁 Refresh</button>
-        </div>
-        <div id="ghHead"></div>
-        <div id="ghBody"></div>
-      </section>
-
-      <!-- ================= MEGA CMD ================= -->
-      <section class="page" id="page-cmd">
-        <div class="term">
-          <div class="term-bar">
-            <span class="td" style="background:#ff5f57"></span><span class="td" style="background:#febc2e"></span><span class="td" style="background:#28c840"></span>
-            <span class="tt">MEGA POWER AI — CMD BOX ⚡</span>
-          </div>
-          <div id="termOut"></div>
-          <div class="term-in"><span class="tp">mega&gt;</span><input id="termIn" autocomplete="off" spellcheck="false" placeholder='type "help" — or "build a todo app"'></div>
-        </div>
-      </section>
-
-      <!-- ================= SETTINGS ================= -->
-      <section class="page" id="page-settings">
-        <div class="set-sec card">
-          <h3>🤖 AI Engine</h3>
-          <div class="ss">Default model for chat & builds — switch any time from the top bar. MegaAI Free needs no key.</div>
-          <div class="set-row"><div class="si">🧠</div><div class="grow"><div class="st">Default model</div><div class="sd">25+ models: ChatGPT, Gemini, Claude, DeepSeek, Grok, Llama, Qwen…</div></div>
-            <select class="inp" id="setModel" style="max-width:280px"></select></div>
-          <div class="set-row"><div class="si">⚡</div><div class="grow"><div class="st">Turbo mode (4X)</div><div class="sd">Faster streaming & generation</div></div>
-            <label class="switch"><input type="checkbox" id="setTurbo"><i></i></label></div>
-          <div class="set-row"><div class="si">🔧</div><div class="grow"><div class="st">Auto-correction</div><div class="sd">Auto-check & offer fixes for every code block</div></div>
-            <label class="switch"><input type="checkbox" id="setAuto"><i></i></label></div>
-        </div>
-
-        <div class="set-sec card">
-          <h3>🔑 API Keys <span class="pill">optional — MegaAI Free works without any key</span></h3>
-          <div class="ss">Bring your own key for GPT-class power. Keys are stored only on this device and sent directly to the provider.</div>
-          <div id="keyList"></div>
-        </div>
-
-        <div class="set-sec card">
-          <h3>🎨 Appearance</h3>
-          <div class="set-row"><div class="si">🌗</div><div class="grow"><div class="st">Theme</div></div>
-            <div class="row" id="themePick"><button class="btn sm" data-theme="dark">🌙 Dark</button><button class="btn sm" data-theme="light">☀️ Light</button></div></div>
-          <div class="set-row"><div class="si">🌈</div><div class="grow"><div class="st">Accent color</div></div>
-            <div class="accent-dots">
-              <div class="accent-dot sel" data-acc="0" style="background:linear-gradient(135deg,#6d5dfc,#35e0ff)"></div>
-              <div class="accent-dot" data-acc="1" style="background:linear-gradient(135deg,#ff4ecd,#6d5dfc)"></div>
-              <div class="accent-dot" data-acc="2" style="background:linear-gradient(135deg,#2fd98a,#35e0ff)"></div>
-              <div class="accent-dot" data-acc="3" style="background:linear-gradient(135deg,#ff8a3d,#ff4ecd)"></div>
-              <div class="accent-dot" data-acc="4" style="background:linear-gradient(135deg,#35e0ff,#2fd98a)"></div>
-            </div></div>
-          <div class="set-row"><div class="si">✨</div><div class="grow"><div class="st">Animations</div><div class="sd">Background, transitions & motion effects</div></div>
-            <label class="switch"><input type="checkbox" id="setAnim"><i></i></label></div>
-        </div>
-
-        <div class="set-sec card">
-          <h3>👤 Account</h3>
-          <div class="set-row"><div class="si">🙂</div><div class="grow"><div class="st" id="accName">Guest</div><div class="sd" id="accEmail">not logged in</div></div>
-            <button class="btn sm" id="setLogin">Log in / Sign up</button><button class="btn sm danger" id="setLogout">Log out</button></div>
-        </div>
-
-        <div class="set-sec card">
-          <h3>💾 Data</h3>
-          <div class="ss">Everything lives on your device — chats, projects, keys, images. Nothing is uploaded anywhere by Mega Power AI.</div>
-          <div class="row" style="flex-wrap:wrap">
-            <button class="btn" id="setExport">⬇️ Export backup</button>
-            <button class="btn" id="setImport">⬆️ Import backup</button>
-            <button class="btn danger" id="setClear">🗑 Delete all data</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= ABOUT ================= -->
-      <section class="page" id="page-about">
-        <div class="about-hero">
-          <img class="al" src="assets/icons/icon-512.png" alt="Mega Power AI">
-          <h1>MEGA POWER AI</h1>
-          <div class="creator">Created by <b>Umesh Chaudhary</b> 👑</div>
-          <p style="max-width:640px;margin:14px auto 0;color:var(--text2);font-size:14.5px;line-height:1.8">
-            The world's fastest and most powerful AI platform of the generation — <b style="color:var(--text)">no limits, no issues</b>.
-            It understands any language and makes working easy. Tell it your ideas — <b style="color:var(--text)">we make them real</b>.
-          </p>
-          <div class="row" style="justify-content:center;margin-top:18px;flex-wrap:wrap">
-            <span class="pill ok">🔒 Secret Project</span>
-            <span class="pill">100% Free</span>
-            <span class="pill">No usage limits in-app</span>
-            <span class="pill">4X faster streaming</span>
-          </div>
-        </div>
-
-        <div class="grid4" style="margin-top:20px">
-          <div class="card stat"><div class="n">25+</div><div class="l">AI MODELS</div></div>
-          <div class="card stat"><div class="n">∞</div><div class="l">GENERATIONS — NO LIMIT</div></div>
-          <div class="card stat"><div class="n">100+</div><div class="l">COUNTRIES · ANY LANGUAGE</div></div>
-          <div class="card stat"><div class="n">6</div><div class="l">PLATFORMS — ANDROID · iOS · WIN · LINUX · MAC · WEB</div></div>
-        </div>
-
-        <h2 style="font-size:19px;font-weight:800;margin:28px 0 14px">⚡ Everything it does</h2>
-        <div class="grid3">
-          <div class="card"><div class="feat-ic">💬</div><b>Chat like ChatGPT</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Streaming answers in any language, with history, markdown, code blocks and one-tap copy.</p></div>
-          <div class="card"><div class="feat-ic">🧑‍💻</div><b>One-prompt projects</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Describe it once — get a complete multi-file project, live preview, auto-check and auto-fix.</p></div>
-          <div class="card"><div class="feat-ic">🖼</div><b>Image generation</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">9 styles, any size, free engine — no API key needed.</p></div>
-          <div class="card"><div class="feat-ic">🎬</div><b>Video generation</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Scenes → AI images → real encoded video with motion, titles and music.</p></div>
-          <div class="card"><div class="feat-ic">🗣</div><b>Voice studio</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Any text to natural speech, every language, with style presets.</p></div>
-          <div class="card"><div class="feat-ic">📁</div><b>Projects & folders</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Saved forever on your device — rebuild any time, download as ZIP anytime.</p></div>
-          <div class="card"><div class="feat-ic">🐙</div><b>GitHub connect</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Pick or create a repo, push projects as commits, import repos to edit.</p></div>
-          <div class="card"><div class="feat-ic">⚙️</div><b>Background jobs</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Builds run while you keep chatting — stop, cancel or resume any time.</p></div>
-          <div class="card"><div class="feat-ic">⌨️</div><b>Mega CMD</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">A real command box: “build a snake game” — one command, full project.</p></div>
-          <div class="card"><div class="feat-ic">🔐</div><b>Login & signup</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Google, Facebook or mobile number with 100+ country codes — fully animated.</p></div>
-          <div class="card"><div class="feat-ic">📲</div><b>Install anywhere</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">Android, iOS, Windows, Linux & macOS — even a Windows CMD-box mode.</p></div>
-          <div class="card"><div class="feat-ic">🌐</div><b>Works online & as an app</b><p style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.6">One codebase — a website, an installed app, and a terminal. Offline Lite engine included.</p></div>
-        </div>
-
-        <div class="card" style="margin-top:22px;text-align:center;padding:28px">
-          <div style="font-size:12px;letter-spacing:.3em;color:var(--text3);font-weight:800">MEGA POWER AI · v1.0 · “NO LIMITS”</div>
-          <div style="margin-top:8px;color:var(--text2);font-size:13px">Made with ⚡ by <b style="color:var(--text)">Umesh Chaudhary</b> · Secret project · © 2026</div>
-        </div>
-      </section>
-
+        <div class="chat-note">Mega Power AI · free & unlimited · created by Umesh Chaudhary · Enter ↵ send · Shift+Enter newline</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- mobile bottom nav -->
-<nav id="mobileNav">
-  <button class="mnav" data-route="chat"><span class="ic"></span>Chat</button>
-  <button class="mnav" data-route="code"><span class="ic"></span>Code</button>
-  <button class="mnav" data-route="studio"><span class="ic"></span>Studio</button>
-  <button class="mnav" data-route="projects"><span class="ic"></span>Projects</button>
-  <button class="mnav" data-route="cmd"><span class="ic"></span>CMD</button>
-</nav>
+<!-- ================= DRAWERS ================= -->
+<div id="drawerOverlay" onclick="Mega.drawer.close()"></div>
+<aside class="drawer" id="drawer-projects">
+  <div class="row" style="margin-bottom:16px">
+    <h2 style="font-size:19px;font-weight:800">📁 My Projects</h2>
+    <button class="btn sm ghost" style="margin-left:auto" onclick="Mega.drawer.close()">✕</button>
+  </div>
+  <p style="font-size:12.5px;color:var(--text2);margin-bottom:16px">Every project you build is saved here — forever. Rebuild, download or push to GitHub any time.</p>
+  <div class="grid2" id="projGrid"></div>
+</aside>
+
+<aside class="drawer lg" id="drawer-settings">
+  <div id="settingsBody"></div>
+</aside>
+
+<aside class="drawer lg" id="drawer-preview">
+  <div class="row" style="margin-bottom:12px">
+    <h2 style="font-size:19px;font-weight:800">▶ <span id="pvName">project</span></h2>
+    <div class="row" style="margin-left:auto;gap:6px">
+      <button class="btn sm" id="pvCode">📝 Code</button>
+      <button class="btn sm primary" id="pvRun">▶ Run</button>
+      <button class="btn sm ghost" onclick="Mega.drawer.close()">✕</button>
+    </div>
+  </div>
+  <div class="pv-grid">
+    <div class="card" style="overflow:auto"><div id="pvTree" class="ft-list"></div></div>
+    <div class="card pv-editor-card">
+      <textarea id="pvEditor" spellcheck="false" class="pv-editor"></textarea>
+      <iframe id="pvFrame" style="display:none" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
+    </div>
+  </div>
+</aside>
 
 <div id="toasts"></div>
 
@@ -407,20 +120,49 @@
 <script src="js/md.js"></script>
 <script src="js/zip.js"></script>
 <script src="js/ai.js"></script>
+<script src="js/media.js"></script>
+<script src="js/code.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/chat.js"></script>
-<script src="js/code.js"></script>
-<script src="js/studio.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/github.js"></script>
-<script src="js/cmd.js"></script>
 <script src="js/settings.js"></script>
 <script>
-/* ---------- nav icons + wiring ---------- */
+/* ---------- drawer system ---------- */
+Mega.drawer = {
+  open(name) {
+    Mega.$('#drawerOverlay').classList.add('open');
+    Mega.$$('.drawer').forEach(d => d.classList.toggle('open', d.id === 'drawer-' + name));
+    if (name === 'projects') Mega.projects.init();
+    if (name === 'settings') Mega.settingsUI.init();
+    document.body.style.overflow = 'hidden';
+  },
+  close() {
+    Mega.$('#drawerOverlay').classList.remove('open');
+    Mega.$$('.drawer').forEach(d => d.classList.remove('open'));
+    document.body.style.overflow = '';
+  }
+};
+
+/* ---------- boot wiring ---------- */
 (function(){
-  const icons = { chat:'chat', code:'code', studio:'image', projects:'folder', github:'github', cmd:'terminal', settings:'settings', about:'info' };
-  Mega.$$('.nav-item[data-route], .mnav[data-route]').forEach(n => { n.querySelector('.ic').innerHTML = Mega.icon(icons[n.dataset.route]); });
-  Mega.$$('.nav-item[data-route], .mnav[data-route]').forEach(n => n.onclick = () => Mega.go(n.dataset.route));
+  Mega.$('#navProjects').querySelector('.ic').innerHTML = Mega.icon('folder');
+  Mega.$('#navSettings').querySelector('.ic').innerHTML = Mega.icon('settings');
+  Mega.$('#navProjects').onclick = () => Mega.drawer.open('projects');
+  Mega.$('#navSettings').onclick = () => Mega.drawer.open('settings');
+  Mega.$$('#cmdChips .chipbtn').forEach(b => b.onclick = () => {
+    const ta = Mega.$('#chatInput');
+    ta.value = b.dataset.cmd;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  });
+  Mega.$('#themeQuick').onclick = () => {
+    Mega.settings.theme = Mega.settings.theme === 'light' ? 'dark' : 'light';
+    Mega.saveSettings(); Mega.applyTheme();
+    Mega.$('#themeQuick').textContent = Mega.settings.theme === 'light' ? '☀️' : '🌙';
+    Mega.toast('Theme: ' + (Mega.settings.theme === 'light' ? 'Light ☀️' : 'Dark 🌙'), '', 'ok', 1500);
+  };
+  Mega.$('#themeQuick').textContent = Mega.settings.theme === 'light' ? '☀️' : '🌙';
   Mega.$('#sbUser').onclick = () => {
     if (Mega.user) {
       Mega.modal('🙋 ' + Mega.esc(Mega.user.name || 'User'), Mega.esc(Mega.user.email || '') + ' · signed in via ' + Mega.esc(Mega.user.via || 'unknown'),
@@ -430,59 +172,44 @@
         </div>`);
     } else Mega.authOpen();
   };
-  Mega.$('#chatSend').innerHTML = Mega.icon('send');
-  document.querySelector('.st-tab[data-tab="image"] .ic').innerHTML = Mega.icon('image');
-  document.querySelector('.st-tab[data-tab="video"] .ic').innerHTML = Mega.icon('video');
-  document.querySelector('.st-tab[data-tab="voice"] .ic').innerHTML = Mega.icon('mic');
   Mega.authRender();
+  Mega.chat.init();
+
+  /* model picker */
+  Mega.uiRenderModels = function(){
+    const cur = Mega.ai.modelById(Mega.settings.model);
+    Mega.$('#modelBtnName').textContent = cur.name;
+    Mega.$('#modelBtn .mi').textContent = cur.emoji;
+    const render = (f='') => {
+      const groups = {};
+      Mega.ai.models.filter(m => m.name.toLowerCase().includes(f) || m.group.toLowerCase().includes(f)).forEach(m => (groups[m.group] = groups[m.group] || []).push(m));
+      Mega.$('#mmList').innerHTML = Object.entries(groups).map(([g, ms]) => `<div class="mm-group">${Mega.esc(g)}</div>` +
+        ms.map(m => `<button class="mm-item ${m.id === Mega.settings.model ? 'sel' : ''}" data-m="${m.id}">
+          <span class="mi" style="background:linear-gradient(135deg,var(--acc1),var(--acc2))">${m.emoji}</span>${Mega.esc(m.name)}
+          ${Mega.ai.hasKey(m.p) && m.p !== 'mega' ? '<span class="tag tag-free">🔑 key</span>' : (m.tag ? `<span class="tag ${m.tag.includes('FREE') ? 'tag-free' : ''}">${m.tag}</span>` : '')}</button>`).join('')).join('') ||
+        '<div style="padding:14px;color:var(--text3);font-size:12.5px">No models match.</div>';
+      Mega.$$('#mmList .mm-item').forEach(b => b.onclick = () => {
+        Mega.settings.model = b.dataset.m; Mega.saveSettings();
+        Mega.uiRenderModels();
+        Mega.$('#modelMenu').classList.remove('open');
+        const sel = Mega.$('#setModel'); if (sel) sel.value = Mega.settings.model;
+        Mega.toast('Model switched ⚡', Mega.ai.modelById(Mega.settings.model).name, 'ok', 1800);
+      });
+    };
+    render();
+    Mega.$('#mmSearch').oninput = (e) => render(e.target.value.toLowerCase());
+  };
+  Mega.$('#modelBtn').onclick = (e) => { e.stopPropagation(); Mega.uiRenderModels(); Mega.$('#modelMenu').classList.toggle('open'); Mega.$('#mmSearch').value = ''; };
+  document.addEventListener('click', (e) => { if (!e.target.closest('.model-pick')) Mega.$('#modelMenu')?.classList.remove('open'); });
+  Mega.uiRenderModels();
+
+  /* account chip sync */
+  const _origSetUser = Mega.setUser;
+  Mega.setUser = (u) => { _origSetUser(u); const n = Mega.$('#accName'), em = Mega.$('#accEmail');
+    if (n) { n.textContent = u ? (u.name || 'User') : 'Guest'; em.textContent = u ? (u.email || '') : 'not logged in'; } };
 })();
 
-/* ---------- model picker (LMArena-style, feature 21) ---------- */
-Mega.uiRenderModels = function(){
-  const cur = Mega.ai.modelById(Mega.settings.model);
-  Mega.$('#modelBtnName').textContent = cur.name;
-  Mega.$('#modelBtn .mi').textContent = cur.emoji;
-  const render = (f='') => {
-    const groups = {};
-    Mega.ai.models.filter(m => m.name.toLowerCase().includes(f) || m.group.toLowerCase().includes(f)).forEach(m => (groups[m.group] = groups[m.group] || []).push(m));
-    Mega.$('#mmList').innerHTML = Object.entries(groups).map(([g, ms]) => `<div class="mm-group">${Mega.esc(g)}</div>` +
-      ms.map(m => `<button class="mm-item ${m.id === Mega.settings.model ? 'sel' : ''}" data-m="${m.id}">
-        <span class="mi" style="background:linear-gradient(135deg,var(--acc1),var(--acc2))">${m.emoji}</span>${Mega.esc(m.name)}
-        ${m.tag ? `<span class="tag ${m.tag.includes('FREE') ? 'tag-free' : ''}">${m.tag}</span>` : ''}</button>`).join('')).join('') ||
-      '<div style="padding:14px;color:var(--text3);font-size:12.5px">No models match.</div>';
-    Mega.$$('#mmList .mm-item').forEach(b => b.onclick = () => {
-      Mega.settings.model = b.dataset.m; Mega.saveSettings();
-      Mega.uiRenderModels();
-      Mega.$('#modelMenu').classList.remove('open');
-      Mega.$('#setModel').value = Mega.settings.model;
-      Mega.toast('Model switched ⚡', Mega.ai.modelById(Mega.settings.model).name, 'ok', 1800);
-    });
-  };
-  render();
-  Mega.$('#mmSearch').oninput = (e) => render(e.target.value.toLowerCase());
-};
-Mega.$('#modelBtn').onclick = (e) => { e.stopPropagation(); Mega.uiRenderModels(); Mega.$('#modelMenu').classList.toggle('open'); Mega.$('#mmSearch').value = ''; };
-document.addEventListener('click', (e) => { if (!e.target.closest('.model-pick')) Mega.$('#modelMenu')?.classList.remove('open'); });
-
-/* ---------- per-page init on first visit ---------- */
-Mega.routes = {
-  chat: () => Mega.chat.init(),
-  code: () => Mega.code.init(),
-  studio: () => Mega.studio.init(),
-  projects: () => Mega.projects.init(),
-  github: () => Mega.github.init(),
-  cmd: () => Mega.cmd.init(),
-  settings: () => { Mega.settingsUI.init(); const n = Mega.$('#accName'), em = Mega.$('#accEmail');
-    if (n) { n.textContent = Mega.user ? (Mega.user.name || 'User') : 'Guest'; em.textContent = Mega.user ? (Mega.user.email || '') : 'not logged in'; } }
-};
-Mega.uiRenderModels();
-
-/* ---------- account chip / about refresh ---------- */
-const _origSetUser = Mega.setUser;
-Mega.setUser = (u) => { _origSetUser(u); const n = Mega.$('#accName'), em = Mega.$('#accEmail');
-  if (n) { n.textContent = u ? (u.name || 'User') : 'Guest'; em.textContent = u ? (u.email || '') : 'not logged in'; } };
-
-/* ---------- PWA service worker ---------- */
+/* PWA */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }

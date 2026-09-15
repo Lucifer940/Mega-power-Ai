@@ -50,7 +50,7 @@ jobs:
       - name: Collect build outputs
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/*.apk dist/Mega-Power-AI-v1.0.apk
+          cp android/app/build/outputs/apk/release/*.apk dist/Mega-Power-AI-v1.1.apk
           cp android/app/build/outputs/bundle/release/*.aab dist/
           ls -la dist/
 
@@ -64,18 +64,19 @@ jobs:
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           echo "Using browser: $CHROME"
           mkdir -p "$GITHUB_WORKSPACE/playstore/screenshots"
-          for page in chat code studio projects cmd github settings about; do
+          shot() {
             "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
               --window-size=1080,1920 --force-device-scale-factor=1 \
-              --virtual-time-budget=10000 \
-              --screenshot="$GITHUB_WORKSPACE/playstore/screenshots/phone-$page.png" \
-              "http://127.0.0.1:8421/index.html?noauth=1#/$page" || true
-          done
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
-            --window-size=1080,1920 --force-device-scale-factor=1 \
-            --virtual-time-budget=10000 \
-            --screenshot="$GITHUB_WORKSPACE/playstore/screenshots/phone-login.png" \
-            "http://127.0.0.1:8421/index.html" || true
+              --virtual-time-budget=15000 \
+              --screenshot="$GITHUB_WORKSPACE/playstore/screenshots/$1.png" \
+              "http://127.0.0.1:8421/index.html?$2" || true
+          }
+          shot phone-hero       "noauth=1"
+          shot phone-chat       "noauth=1&demo=answer"
+          shot phone-builder    "noauth=1&demo=project"
+          shot phone-projects   "noauth=1&open=projects"
+          shot phone-settings   "noauth=1&open=settings"
+          shot phone-login      ""
           kill $SRV || true
           ls -la "$GITHUB_WORKSPACE/playstore/screenshots/" || true
 
@@ -91,15 +92,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="android-v1.0"
+          TAG="android-v1.1"
           cat > /tmp/release-notes.md <<'NOTES'
-          Mega Power AI v1.0 - Android build, signed and ready.
+          Mega Power AI v1.1 — the all-new all-in-one AI chat. One box does everything.
+
+          What's new:
+          - ChatGPT-style single chat: ask, search, build apps, generate images & videos — all in one box
+          - Real web search with live source links (smart / always / off modes)
+          - Smart follow-up suggestion chips after every answer
+          - ChatGPT-quality image generation: posters, flyers, thumbnails & 10+ style presets
+          - Image-to-video + prompt-to-video: 15/30/60s, up to 1080p, music, zero watermarks
+          - Full settings hub with search: models, API keys (permanent, editable), theme, accents
+          - Projects auto-saved with Run / Check / Fix / ZIP / GitHub push
+          - Understands every language, UI in English
 
           Files:
-          - Mega-Power-AI-v1.0.apk - install directly on any Android 7.0+ phone
+          - Mega-Power-AI-v1.1.apk — install directly on any Android 7.0+ phone
             (enable Install-unknown-apps, open the file, done)
-          - app-release.aab - upload THIS file to Google Play Console, Production, Create release
-          - phone-*.png - real Play Store screenshots
+          - app-release.aab — upload THIS file to Google Play Console, Production, Create release
+          - phone-*.png — real Play Store screenshots
 
           Built with the official Android toolchain by GitHub Actions.
           Created by Umesh Chaudhary. Secret project.
@@ -110,7 +121,7 @@ jobs:
           else
             gh release create "$TAG" \
               --target "$GITHUB_SHA" \
-              --title "Mega Power AI v1.0 - Android (APK + Play Store AAB)" \
+              --title "Mega Power AI v1.1 — All-in-one AI Chat (APK + Play Store AAB)" \
               --notes-file /tmp/release-notes.md \
               dist/*.apk dist/*.aab
           fi

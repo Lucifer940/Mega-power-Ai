@@ -1,7 +1,8 @@
 /* ============================================================
-   MEGA POWER AI — ai.js  |  multi-provider AI engine
-   • Free keyless mode (MegaAI Free)  • Bring-your-own-key providers
-   • Streaming (SSE)  • Offline fallback engine (MegaAI Lite)
+   MEGA POWER AI — ai.js  |  the brain
+   Multi-provider chat + web search + image engine + intent
+   router + suggestions. Free keyless mode + BYO keys + offline
+   Lite engine fallback. Created by Umesh Chaudhary.
    ============================================================ */
 'use strict';
 window.Mega = window.Mega || {};
@@ -10,7 +11,7 @@ Mega.ai = {};
 /* ---------------- providers ---------------- */
 Mega.ai.providers = {
   mega:       { name: 'MegaAI Free',        base: 'https://text.pollinations.ai/openai', free: true,  keyUrl: '' },
-  openai:     { name: 'OpenAI',             base: 'https://api.openai.com/v1/chat/completions', keyUrl: 'https://platform.openai.com/api-keys' },
+  openai:     { name: 'OpenAI (ChatGPT)',   base: 'https://api.openai.com/v1/chat/completions', keyUrl: 'https://platform.openai.com/api-keys' },
   gemini:     { name: 'Google Gemini',      base: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', keyUrl: 'https://aistudio.google.com/apikey' },
   anthropic:  { name: 'Anthropic Claude',   base: 'https://api.anthropic.com/v1/messages', keyUrl: 'https://console.anthropic.com/settings/keys', anthropic: true },
   groq:       { name: 'Groq (free tier)',   base: 'https://api.groq.com/openai/v1/chat/completions', keyUrl: 'https://console.groq.com/keys', free: true },
@@ -20,107 +21,185 @@ Mega.ai.providers = {
   mistral:    { name: 'Mistral',            base: 'https://api.mistral.ai/v1/chat/completions', keyUrl: 'https://console.mistral.ai/api-keys' }
 };
 
-/* ---------------- model catalog (LMArena-style picker) ---------------- */
+/* ---------------- model catalog ---------------- */
 Mega.ai.models = [
-  // MegaAI Free — no key needed
-  { id: 'mega-openai',      p: 'mega', m: 'openai',      name: 'MegaAI Core',       group: '⚡ MegaAI Free — no key needed', emoji: 'M', tag: 'FREE' },
-  { id: 'mega-fast',        p: 'mega', m: 'openai-fast', name: 'MegaAI Turbo (4X)', group: '⚡ MegaAI Free — no key needed', emoji: 'T', tag: 'FREE' },
-  { id: 'mega-mistral',     p: 'mega', m: 'mistral',     name: 'Mistral',           group: '⚡ MegaAI Free — no key needed', emoji: 'M' },
-  { id: 'mega-qwen',        p: 'mega', m: 'qwen-coder',  name: 'Qwen Coder',        group: '⚡ MegaAI Free — no key needed', emoji: 'Q' },
-  { id: 'mega-llama',       p: 'mega', m: 'llama',       name: 'Llama',             group: '⚡ MegaAI Free — no key needed', emoji: 'L' },
-  { id: 'mega-deepseek',    p: 'mega', m: 'deepseek',    name: 'DeepSeek',          group: '⚡ MegaAI Free — no key needed', emoji: 'D' },
-  // OpenAI
-  { id: 'gpt-4o',           p: 'openai', m: 'gpt-4o',           name: 'ChatGPT (GPT-4o)',        group: 'OpenAI — your API key', emoji: 'G' },
-  { id: 'gpt-4o-mini',      p: 'openai', m: 'gpt-4o-mini',      name: 'GPT-4o mini (cheap)',     group: 'OpenAI — your API key', emoji: 'G' },
-  { id: 'gpt-4.1',          p: 'openai', m: 'gpt-4.1',          name: 'GPT-4.1',                 group: 'OpenAI — your API key', emoji: 'G' },
-  { id: 'o3-mini',          p: 'openai', m: 'o3-mini',          name: 'o3-mini (reasoning)',     group: 'OpenAI — your API key', emoji: 'O' },
-  // Gemini
-  { id: 'gem-2.5-flash',    p: 'gemini', m: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash',        group: 'Google Gemini — your API key', emoji: '✦' },
-  { id: 'gem-2.5-pro',      p: 'gemini', m: 'gemini-2.5-pro',   name: 'Gemini 2.5 Pro',          group: 'Google Gemini — your API key', emoji: '✦' },
-  // Claude
-  { id: 'claude-sonnet',    p: 'anthropic', m: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5',   group: 'Anthropic — your API key', emoji: 'C' },
-  { id: 'claude-opus',      p: 'anthropic', m: 'claude-opus-4-1',   name: 'Claude Opus 4.1',     group: 'Anthropic — your API key', emoji: 'C' },
-  // Groq — free tier
-  { id: 'groq-llama70',     p: 'groq', m: 'llama-3.3-70b-versatile',       name: 'Llama 3.3 70B',  group: 'Groq — free key, 4X speed', emoji: 'L', tag: 'FREE KEY' },
-  { id: 'groq-dsr1',        p: 'groq', m: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', group: 'Groq — free key, 4X speed', emoji: 'D', tag: 'FREE KEY' },
-  { id: 'groq-qwen',        p: 'groq', m: 'qwen-2.5-coder-32b',            name: 'Qwen Coder 32B', group: 'Groq — free key, 4X speed', emoji: 'Q', tag: 'FREE KEY' },
-  // OpenRouter free
-  { id: 'or-dsv3',          p: 'openrouter', m: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3',  group: 'OpenRouter — free models', emoji: 'D', tag: 'FREE' },
-  { id: 'or-llama',         p: 'openrouter', m: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', group: 'OpenRouter — free models', emoji: 'L', tag: 'FREE' },
-  // DeepSeek / Grok / Mistral
-  { id: 'ds-chat',          p: 'deepseek', m: 'deepseek-chat',    name: 'DeepSeek Chat',  group: 'DeepSeek — your API key', emoji: 'D' },
-  { id: 'ds-reasoner',      p: 'deepseek', m: 'deepseek-reasoner', name: 'DeepSeek R1',   group: 'DeepSeek — your API key', emoji: 'D' },
-  { id: 'grok-3',           p: 'xai', m: 'grok-3',       name: 'Grok 3',         group: 'xAI — your API key', emoji: 'X' },
-  { id: 'grok-3-mini',      p: 'xai', m: 'grok-3-mini',  name: 'Grok 3 mini',    group: 'xAI — your API key', emoji: 'X' },
-  { id: 'mistral-l',        p: 'mistral', m: 'mistral-large-latest', name: 'Mistral Large', group: 'Mistral — your API key', emoji: 'M' },
-  { id: 'codestral',        p: 'mistral', m: 'codestral-latest',    name: 'Codestral (code)', group: 'Mistral — your API key', emoji: '#' }
+  { id: 'mega-openai',    p: 'mega', m: 'openai',      name: 'MegaAI Core',       group: '⚡ MegaAI Free — no key needed', emoji: 'M', tag: 'FREE' },
+  { id: 'mega-fast',      p: 'mega', m: 'openai-fast', name: 'MegaAI Turbo (4X)', group: '⚡ MegaAI Free — no key needed', emoji: 'T', tag: 'FREE' },
+  { id: 'mega-mistral',   p: 'mega', m: 'mistral',     name: 'Mistral',           group: '⚡ MegaAI Free — no key needed', emoji: 'M' },
+  { id: 'mega-qwen',      p: 'mega', m: 'qwen-coder',  name: 'Qwen Coder',        group: '⚡ MegaAI Free — no key needed', emoji: 'Q' },
+  { id: 'mega-llama',     p: 'mega', m: 'llama',       name: 'Llama',             group: '⚡ MegaAI Free — no key needed', emoji: 'L' },
+  { id: 'mega-deepseek',  p: 'mega', m: 'deepseek',    name: 'DeepSeek',          group: '⚡ MegaAI Free — no key needed', emoji: 'D' },
+  { id: 'gpt-4o',         p: 'openai', m: 'gpt-4o',          name: 'ChatGPT (GPT-4o)',   group: 'OpenAI — your API key', emoji: 'G' },
+  { id: 'gpt-4o-mini',    p: 'openai', m: 'gpt-4o-mini',     name: 'GPT-4o mini',        group: 'OpenAI — your API key', emoji: 'G' },
+  { id: 'gpt-4.1',        p: 'openai', m: 'gpt-4.1',         name: 'GPT-4.1',            group: 'OpenAI — your API key', emoji: 'G' },
+  { id: 'o3-mini',        p: 'openai', m: 'o3-mini',         name: 'o3-mini (reasoning)', group: 'OpenAI — your API key', emoji: 'O' },
+  { id: 'gem-2.5-flash',  p: 'gemini', m: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash',   group: 'Google Gemini — your API key', emoji: '✦' },
+  { id: 'gem-2.5-pro',    p: 'gemini', m: 'gemini-2.5-pro',   name: 'Gemini 2.5 Pro',     group: 'Google Gemini — your API key', emoji: '✦' },
+  { id: 'claude-sonnet',  p: 'anthropic', m: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', group: 'Anthropic — your API key', emoji: 'C' },
+  { id: 'claude-opus',    p: 'anthropic', m: 'claude-opus-4-1',   name: 'Claude Opus 4.1',   group: 'Anthropic — your API key', emoji: 'C' },
+  { id: 'groq-llama70',   p: 'groq', m: 'llama-3.3-70b-versatile',       name: 'Llama 3.3 70B',  group: 'Groq — free key, 4X speed', emoji: 'L', tag: 'FREE KEY' },
+  { id: 'groq-dsr1',      p: 'groq', m: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', group: 'Groq — free key, 4X speed', emoji: 'D', tag: 'FREE KEY' },
+  { id: 'groq-qwen',      p: 'groq', m: 'qwen-2.5-coder-32b',            name: 'Qwen Coder 32B', group: 'Groq — free key, 4X speed', emoji: 'Q', tag: 'FREE KEY' },
+  { id: 'groq-search',    p: 'groq', m: 'compound-mini',                 name: 'Compound (built-in web search)', group: 'Groq — free key, 4X speed', emoji: '🌐', tag: 'SEARCH' },
+  { id: 'or-dsv3',        p: 'openrouter', m: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3',  group: 'OpenRouter — free models', emoji: 'D', tag: 'FREE' },
+  { id: 'or-llama',       p: 'openrouter', m: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', group: 'OpenRouter — free models', emoji: 'L', tag: 'FREE' },
+  { id: 'or-online',      p: 'openrouter', m: 'openai/gpt-4o-mini:online', name: 'Any model + live web search', group: 'OpenRouter — web-search models', emoji: '🌐', tag: 'SEARCH' },
+  { id: 'ds-chat',        p: 'deepseek', m: 'deepseek-chat',     name: 'DeepSeek Chat',  group: 'DeepSeek — your API key', emoji: 'D' },
+  { id: 'ds-reasoner',    p: 'deepseek', m: 'deepseek-reasoner', name: 'DeepSeek R1',    group: 'DeepSeek — your API key', emoji: 'D' },
+  { id: 'grok-3',         p: 'xai', m: 'grok-3',       name: 'Grok 3',      group: 'xAI — your API key', emoji: 'X' },
+  { id: 'grok-3-mini',    p: 'xai', m: 'grok-3-mini',  name: 'Grok 3 mini', group: 'xAI — your API key', emoji: 'X' },
+  { id: 'mistral-l',      p: 'mistral', m: 'mistral-large-latest', name: 'Mistral Large', group: 'Mistral — your API key', emoji: 'M' },
+  { id: 'codestral',      p: 'mistral', m: 'codestral-latest',    name: 'Codestral (code)', group: 'Mistral — your API key', emoji: '#' }
 ];
 Mega.ai.modelById = (id) => Mega.ai.models.find(m => m.id === id) || Mega.ai.models[0];
+Mega.ai.hasKey = (p) => !!(Mega.settings.keys || {})[p];
 
 /* ---------------- prompts ---------------- */
-Mega.ai.systemPrompt = () =>
-  'You are Mega Power AI — the world\'s fastest, most powerful AI assistant, created by Umesh Chaudhary. ' +
-  'You reply in the same language the user writes in (default English). Be friendly, precise and complete. ' +
-  'When you write code, always use fenced code blocks with the language tag, and make code complete, runnable and bug-free. ' +
-  'When asked who made you: "I was created by Umesh Chaudhary — Mega Power AI."';
+Mega.ai.systemPrompt = () => {
+  const custom = (Mega.settings.sysPrompt || '').trim();
+  return 'You are Mega Power AI — the world\'s fastest, most powerful AI assistant, created by Umesh Chaudhary. ' +
+    'Reply in the same language the user writes in (the app UI itself is English). ' +
+    'Be genuinely helpful, accurate and complete — like the best of ChatGPT, Gemini and DeepSeek. ' +
+    'Use clean markdown. When you write code, use fenced code blocks with a language tag — complete and runnable. ' +
+    'When asked who made you: "I was created by Umesh Chaudhary — Mega Power AI."' +
+    (custom ? '\n\nUser instructions (follow them): ' + custom : '');
+};
 
 Mega.ai.codePrompt = () =>
-  'You are Mega Power AI Code Studio — an elite full-stack engineer that turns ONE prompt into a complete, working project. ' +
+  'You are Mega Power AI — an elite full-stack engineer that turns ONE prompt into a complete, working project. ' +
   'Rules: (1) Output every file using EXACTLY this format, one after another:\n' +
   '**FILE: filename.ext**\n```ext\n<full file content>\n```\n' +
-  '(2) Web projects MUST include index.html; keep CSS/JS in separate files (style.css, script.js) when the project has more than one file. ' +
+  '(2) Web projects MUST include index.html; keep CSS/JS in separate files when there are multiple files. ' +
   '(3) Code must be complete, runnable, modern and beautiful (dark UI, gradients, rounded corners). No placeholders, no TODOs. ' +
   '(4) Prefer zero-dependency vanilla code so it runs anywhere. (5) After the files, add a short "## ✅ Project ready" summary.';
 
-/* ---------------- SSE / streaming ---------------- */
+/* ---------------- intent router (one box, right result) ---------------- */
+Mega.ai.intent = (q) => {
+  const t = q.trim().toLowerCase();
+  if (/^\/(help|commands)\b/.test(t)) return { type: 'help' };
+  if (/^\/new\b|^\/clear\b/.test(t)) return { type: 'new' };
+  if (/^\/model\b/.test(t)) return { type: 'model', arg: q.replace(/^\/model\s*/i, '') };
+  if (/^\/(keys?|settings)\b/.test(t)) return { type: 'settings' };
+  if (/^\/(search|google|web)\b/.test(t)) return { type: 'search', arg: q.replace(/^\/(search|google|web)\s*/i, '') };
+  if (/^\/(image|img|draw|paint)\b/.test(t)) return { type: 'image', arg: q.replace(/^\/(image|img|draw|paint)\s*/i, '') };
+  if (/^\/(video|vid|animate)\b/.test(t)) return { type: 'video', arg: q.replace(/^\/(video|vid|animate)\s*/i, '') };
+  if (/^\/(build|app|project|code)\b/.test(t)) return { type: 'build', arg: q.replace(/^\/(build|app|project|code)\s*/i, '') };
+  // natural language intents (video before image, build before image)
+  if (/(make|create|generate|produce|do)\b[^.;]{0,30}\b(video|clip|animation|reel|short|movie)\b/.test(t) ||
+      /\bimg2vid|\bimage to video|\bphoto to video/.test(t)) return { type: 'video', arg: q };
+  if (/\b(build|make|create|develop|code|write)\b[^.;]{0,24}\b(app|application|website|web ?site|web ?page|game|landing page|portfolio|clone|calculator|tracker|todo|quiz|blog|shop|store|dashboard|form)\b/.test(t) ||
+      /^build\b/.test(t)) return { type: 'build', arg: q };
+  if (/\b(draw|generate|create|make|paint|design)\b[^.;]{0,40}\b(image|picture|photo|art|logo|poster|flyer|thumbnail|wallpaper|icon|banner|illustration|image of|picture of)\b/.test(t) ||
+      /^\d+\s*(x|×)\s*\d+\b/.test(t) ||
+      /\bdesign (a|an|me) \b/.test(t)) return { type: 'image', arg: q };
+  if (/^(search|google|look up|find)\b/.test(t)) return { type: 'search', arg: q.replace(/^(search|google|look up|find)\s*(for)?\s*/i, '') };
+  return { type: 'chat', arg: q };
+};
+
+/* ---------------- suggestions (the "brain" next-step chips) ---------------- */
+Mega.ai.suggest = (kind, text, meta) => {
+  const s = [];
+  if (kind === 'image') {
+    s.push('🎨 Make a poster version', '🔁 Another variation', '✏️ Edit this image', '🎬 Turn it into a video', '💬 Describe & refine it');
+  } else if (kind === 'video') {
+    s.push('🎞 Make a longer version', '🎵 Add music', '🖼 New scenes', '⬇️ How do I post it?');
+  } else if (kind === 'project') {
+    s.push('▶ Run it', '🔍 Check the code', '🔧 Fix any issues', '📦 Download ZIP', '🐙 Push to GitHub', '🎨 Redesign the UI');
+  } else {
+    const t = (text || '').toLowerCase();
+    if (/<code|```|\bfunction\b|\bconst\b/.test(text || '')) s.push('🔧 Explain this code', '▶ Make it a full app', '🐞 Find bugs in it');
+    s.push('📝 Summarize in 3 bullets', '💡 Explain like I\'m 5', '🌍 Translate to Hindi', '🎨 Make an image of this', '🔍 Search the web for more', '🗣 Speak this aloud', '➕ More detail please');
+    if (t.includes('todo')) s.unshift('▶ Build the todo app now');
+  }
+  return s.slice(0, 5);
+};
+
+/* ============================================================
+   WEB SEARCH — real results from Wikipedia + DuckDuckGo
+   ============================================================ */
+Mega.search = {
+  needed(q) {
+    const mode = Mega.settings.searchMode || 'smart';
+    if (mode === 'off') return false;
+    if (mode === 'always') return true;
+    return /\b(latest|news|today|yesterday|tonight|now|current(ly)?|live|update|released|price|stock|score|weather|who is|who was|what is|when is|where is|how much|how many|2024|2025|2026|definition of|meaning of|trending|viral|search|google|wiki(pedia)?)\b/i.test(q);
+  },
+  async wiki(q) {
+    const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=' +
+      encodeURIComponent(q) + '&gsrlimit=3&prop=extracts|info&inprop=url&exintro=1&explaintext=1&exchars=700';
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    const pages = Object.values(j.query?.pages || {});
+    return pages.map(p => ({ title: p.title, url: p.fullurl, snippet: (p.extract || '').slice(0, 700) }));
+  },
+  async ddg(q) {
+    const u = 'https://api.allorigins.win/raw?url=' +
+      encodeURIComponent('https://api.duckduckgo.com/?q=' + encodeURIComponent(q) + '&format=json&no_html=1&skip_disambig=1');
+    const r = await fetch(u, { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    const out = [];
+    if (j.AbstractText) out.push({ title: j.Heading || q, url: j.AbstractURL, snippet: j.AbstractText });
+    (j.RelatedTopics || []).slice(0, 4).forEach(t => {
+      if (t.Text && t.FirstURL) out.push({ title: t.Text.split(' - ')[0].slice(0, 80), url: t.FirstURL, snippet: t.Text });
+    });
+    return out;
+  },
+  async web(q) {
+    const [w, d] = await Promise.allSettled([Mega.search.wiki(q), Mega.search.ddg(q)]);
+    const sources = [];
+    if (w.status === 'fulfilled') sources.push(...w.value);
+    if (d.status === 'fulfilled') sources.push(...d.value);
+    const seen = new Set();
+    const uniq = sources.filter(s => { if (seen.has(s.url)) return false; seen.add(s.url); return true; }).slice(0, 6);
+    const context = uniq.map(s => `SOURCE: ${s.title}\nURL: ${s.url}\n${s.snippet}`).join('\n\n');
+    return { sources: uniq, context };
+  }
+};
+
+/* ============================================================
+   CHAT — streaming, provider-aware, search-grounded
+   ============================================================ */
 Mega.ai.chat = async (messages, opts = {}) => {
   const model = Mega.ai.modelById(opts.model || Mega.settings.model);
   const provider = Mega.ai.providers[model.p];
   const keys = Mega.settings.keys || {};
-  const turbo = opts.turbo !== false;
   let out = '';
   const onToken = opts.onToken || (() => {});
   const signal = opts.signal;
 
-  // provider that needs a key but none saved → go straight to fallback chain
   const hasKey = !provider.keyUrl || keys[model.p];
   if (hasKey) {
     try {
-      if (provider.anthropic) {
-        out = await Mega.ai._anthropic(messages, model.m, keys.anthropic, onToken, signal);
-      } else {
-        out = await Mega.ai._openaiCompat(provider.base, messages, model.m, keys[model.p], provider.keyUrl ? true : false, onToken, signal, model.p);
-      }
+      if (provider.anthropic) out = await Mega.ai._anthropic(messages, model.m, keys.anthropic, onToken, signal);
+      else out = await Mega.ai._openaiCompat(provider.base, messages, model.m, keys[model.p], onToken, signal, model.p);
       if (out.trim()) return { text: out, model, engine: 'cloud' };
       throw new Error('empty');
     } catch (err) {
       if (signal && signal.aborted) throw err;
       if (opts.noFallback) throw err;
-      // free MegaAI chain: try fast variant + GET endpoint before Lite
       if (model.p === 'mega') {
         try { out = await Mega.ai._pollinationsGet(messages, onToken, signal); if (out.trim()) return { text: out, model, engine: 'free-get' }; } catch (e) { if (signal && signal.aborted) throw e; }
       }
-      if (String(err.message || err).includes('key') || String(err.status) === '401' || String(err.status) === '403') {
-        Mega.toast('API key needed', `Add your ${provider.name} key in Settings → AI Keys, or stay on the free MegaAI engine.`, 'warn');
+      const msg = String(err.message || err);
+      if (msg.includes('key') || String(err.status) === '401' || String(err.status) === '403') {
+        Mega.toast('API key needed', `Add your ${provider.name} key in Settings → API Keys, or stay on MegaAI Free.`, 'warn');
+      } else if (model.p !== 'mega') {
+        Mega.toast('Provider failed — switching to free engine', msg.slice(0, 80), 'warn');
       }
     }
   } else if (model.p !== 'mega') {
-    Mega.toast('API key needed', `Add your ${provider.name} key in Settings → AI Keys — or switch to MegaAI Free (no key).`, 'warn', 5000);
+    Mega.toast('API key needed', `Add your ${provider.name} key in Settings → API Keys — or use MegaAI Free (no key).`, 'warn', 5000);
   }
-  // offline / fallback engine — always works
   out = await Mega.ai.lite(messages, opts, onToken, signal);
   return { text: out, model, engine: 'lite' };
 };
 
-Mega.ai._openaiCompat = async (base, messages, model, key, needKey, onToken, signal, prov) => {
+Mega.ai._openaiCompat = async (base, messages, model, key, onToken, signal, prov) => {
   const headers = { 'Content-Type': 'application/json' };
   if (key) headers['Authorization'] = 'Bearer ' + key;
   if (prov === 'openrouter') { headers['HTTP-Referer'] = location.origin; headers['X-Title'] = 'Mega Power AI'; }
-  const res = await fetch(base, {
-    method: 'POST', headers, signal,
-    body: JSON.stringify({ model, messages, stream: true, ...(prov === 'mega' ? { referrer: 'megapowerai' } : {}) })
-  });
-  if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; try { e.detail = (await res.text()).slice(0, 300); } catch {} throw e; }
+  const res = await fetch(base, { method: 'POST', headers, signal, body: JSON.stringify({ model, messages, stream: true }) });
+  if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; try { e.detail = (await res.text()).slice(0, 240); } catch {} throw e; }
   return await Mega.ai._readSSE(res, (json) => json.choices?.[0]?.delta?.content || '', onToken);
 };
 
@@ -129,10 +208,7 @@ Mega.ai._anthropic = async (messages, model, key, onToken, signal) => {
   const msgs = messages.filter(m => m.role !== 'system');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST', signal,
-    headers: {
-      'Content-Type': 'application/json', 'x-api-key': key,
-      'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true'
-    },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({ model, max_tokens: 8000, stream: true, system: sys || undefined, messages: msgs })
   });
   if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
@@ -159,7 +235,6 @@ Mega.ai._readSSE = async (res, pick, onToken) => {
   return out;
 };
 
-/* pollinations simple GET fallback */
 Mega.ai._pollinationsGet = async (messages, onToken, signal) => {
   const q = messages.filter(m => m.role === 'user').map(m => m.content).join('\n') || 'hello';
   const sys = messages.find(m => m.role === 'system');
@@ -172,19 +247,16 @@ Mega.ai._pollinationsGet = async (messages, onToken, signal) => {
   return text;
 };
 
-/* ---------------- MegaAI Lite — built-in offline engine ---------------- */
+/* ---------------- MegaAI Lite — offline engine ---------------- */
 Mega.ai.lite = async (messages, opts, onToken, signal) => {
   const lastUser = [...messages].reverse().find(m => m.role === 'user');
   const q = (lastUser ? lastUser.content : '').trim();
-  const isCode = opts.mode === 'code';
-  const text = isCode ? Mega.lite.project(q) : Mega.lite.chat(q, messages);
-  // stream locally
+  const text = opts.mode === 'code' ? Mega.lite.project(q) : Mega.lite.chat(q, messages);
   const words = text.split(/(\s+)/);
   const step = Mega.settings.turbo ? 14 : 6;
   for (let i = 0; i < words.length; i += step) {
     if (signal && signal.aborted) throw new DOMException('aborted', 'AbortError');
-    const chunk = words.slice(i, i + step).join('');
-    onToken(chunk, words.slice(0, i + step).join(''));
+    onToken(words.slice(i, i + step).join(''), words.slice(0, i + step).join(''));
     await Mega.sleep(Mega.settings.turbo ? 12 : 26);
   }
   return text;
@@ -194,18 +266,16 @@ Mega.lite = {
   chat(q, messages) {
     const l = q.toLowerCase();
     if (/^(hi+|hello+|hey+|yo|sup|good (morning|afternoon|evening))[\s!.,]*$/.test(l))
-      return '👋 **Hello! I am Mega Power AI** — created by Umesh Chaudhary.\n\nI am running in **MegaAI Lite** (offline built-in) mode right now, so the cloud engine is unreachable or warming up. I can still:\n\n- 💬 Answer questions & explain ideas\n- ⚡ Generate complete app projects (try: *make a todo app*, *build a snake game*, *create a portfolio website*)\n- 🖼️ Generate images in the **Create Studio** tab\n\nFor full cloud intelligence, open **Settings → AI Keys** and add any free key (Groq / Gemini / OpenRouter) — or just keep using MegaAI Free when you are online.';
+      return '👋 **Hello! I am Mega Power AI** — created by Umesh Chaudhary.\n\nI am running in **MegaAI Lite** (offline built-in) mode right now, so the cloud engine is unreachable or warming up. I can still:\n\n- 💬 Answer questions & explain ideas\n- ⚡ Build complete app projects (try: *make a todo app*, *build a snake game*, *create a portfolio website*)\n- 🖼️ Generate images and 🎬 videos (online)\n\nFor full cloud intelligence, open **⚙️ Settings → API Keys** and add any free key (Groq / Gemini / OpenRouter) — or keep using MegaAI Free when you are online.';
     if (/(who).*(made|created|built)|creator|owner/.test(l))
       return '**Mega Power AI** was created by **Umesh Chaudhary** 🚀\n\nIt is one of the world\'s fastest and most powerful AI platforms — no limits, and it turns your ideas into real projects.';
     if (/(what can you do|help|features|capability)/.test(l))
-      return '## ⚡ Mega Power AI — powers\n\n| Feature | Where |\n|---|---|\n| 💬 Chat like ChatGPT | **AI Chat** |\n| 🧑‍💻 One prompt → full project + auto-fix | **Code Studio** |\n| 🖼️ AI image generation (free, no key) | **Create Studio → Image** |\n| 🎬 AI video maker (scenes → video) | **Create Studio → Video** |\n| 🗣️ AI voice / narration | **Create Studio → Voice** |\n| 📁 Projects, folders, ZIP download | **My Projects** |\n| 🐙 GitHub connect, create & push repos | **GitHub Connect** |\n| ⌨️ One-command builder | **Mega CMD** |\n| 📲 Installable app (Android/iOS/Win/Linux) | sidebar **Install** button |\n\nEverything is free — no usage limits inside the app. 🔒 *Secret project — built by Umesh Chaudhary.*';
+      return '## ⚡ Everything I can do — right from this chat box\n\nJust type naturally. I detect what you want automatically:\n\n| You say | I do |\n|---|---|\n| *"make an image of a neon city"* | 🖼️ Generate a real image (poster, flyer, logo styles) |\n| *"make a video of a rocket launch"* | 🎬 Paint scenes + encode a real video |\n| *"build a snake game"* | 🧑‍💻 Generate the full project, check it, let you preview/download/push it |\n| *"latest news about X"* | 🔍 Search the web live and answer with sources |\n| anything else | 💬 Stream a smart answer like ChatGPT |\n\n**Slash commands** for power users: `/image`, `/video`, `/build`, `/search`, `/model`, `/help`.\n\nEverything is free — no usage limits in-app. 🔒 *Secret project by Umesh Chaudhary.*';
     if (isProjRequest(l)) {
-      const p = Mega.lite.project(q);
-      return 'Here is your project — generated by the built-in **MegaAI Lite** engine (works even offline) 🚀\n\n' + p + '\n\n> 💡 Online? The cloud engine can build *anything* you describe — this offline engine covers the most popular app types.';
+      return 'Here is your project — generated by the built-in **MegaAI Lite** engine (works even offline) 🚀\n\n' + Mega.lite.project(q) + '\n\n> 💡 Online? The cloud engine can build *anything* you describe — this offline engine covers the most popular app types.';
     }
-    return `### MegaAI Lite answer 🤖\n\nI heard you: *"${Mega.esc(q.slice(0, 180))}"*\n\nI am currently in **offline Lite mode** (no cloud engine reachable), so deep reasoning is limited — but I never fail you:\n\n1. **⚡ Try again** — the free cloud engine may be back (it throttles briefly when busy).\n2. **🔑 Add a free API key** — *Settings → AI Keys* → Groq or OpenRouter (free) or Gemini → full GPT-class power.\n3. **🧑‍💻 Want an app?** I can still build: todo app, calculator, snake game, quiz app, portfolio, landing page, notes app, weather app, timer, memory game, rock-paper-scissors — just ask for one!\n\n*— Mega Power AI, created by Umesh Chaudhary*`;
+    return `### MegaAI Lite answer 🤖\n\nI heard you: *"${Mega.esc(q.slice(0, 180))}"*\n\nI am currently in **offline Lite mode** (no cloud engine reachable), so deep reasoning is limited — but I never fail you:\n\n1. **⚡ Try again** — the free cloud engine may be back (it throttles briefly when busy).\n2. **🔑 Add a free API key** — *Settings → API Keys* → Groq or OpenRouter (free) or Gemini → full GPT-class power.\n3. **🧑‍💻 Want an app?** I can still build: todo app, calculator, snake game, quiz app, portfolio, landing page, notes app, weather app, timer, memory game, rock-paper-scissors — just ask!\n\n*— Mega Power AI, created by Umesh Chaudhary*`;
   },
-  /* ---- project templates (FILE blocks) ---- */
   project(q) {
     const l = ' ' + q.toLowerCase() + ' ';
     const t = [
@@ -232,13 +302,13 @@ function isProjRequest(l) {
   return /(make|create|build|generate|code for|write).*(app|game|website|site|page|calculator|todo|clock|quiz|portfolio|timer|notes|weather|snake|chat)/.test(l);
 }
 
-/* --- shared page shell for lite templates --- */
+/* --- shared page shell --- */
 Mega.lite._page = (title, css, body, js) => {
   const files = [];
   files.push(`**FILE: index.html**\n\`\`\`html\n<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${Mega.esc(title)}</title>\n<link rel="stylesheet" href="style.css">\n</head>\n<body>\n${body}\n<script src="script.js"><\/script>\n</body>\n</html>\n\`\`\``);
   files.push(`**FILE: style.css**\n\`\`\`css\n${css}\n\`\`\``);
   files.push(`**FILE: script.js**\n\`\`\`javascript\n${js}\n\`\`\``);
-  return files.join('\n\n') + '\n\n## ✅ Project ready\n\n**' + title + '** — 3 files: `index.html`, `style.css`, `script.js`. Click **Preview** to run it live, **Check** to auto-check the code, or **Download ZIP**.';
+  return files.join('\n\n') + '\n\n## ✅ Project ready\n\n**' + title + '** — 3 files: `index.html`, `style.css`, `script.js`. Use **▶ Run** to preview it live, **🔍 Check** to auto-check the code, or **📦 ZIP** to download.';
 };
 Mega.lite._baseCSS = `*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
 body{min-height:100vh;background:radial-gradient(900px 500px at 20% -10%,rgba(109,93,252,.25),transparent 60%),radial-gradient(800px 600px at 110% 110%,rgba(53,224,255,.18),transparent 55%),#0b1022;color:#eef2ff;display:flex;flex-direction:column;align-items:center;padding:40px 18px}
@@ -366,7 +436,7 @@ svg{transform:rotate(-90deg)}
 const t=document.getElementById('t'),arc=document.getElementById('arc'),go=document.getElementById('go');
 function fmt(){t.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
 arc.style.strokeDashoffset=653*(1-left/total);}
-function tick(){if(left>0){left--;fmt();}else{document.title='Done!';new Audio().play?.();beep();switchMode();}}
+function tick(){if(left>0){left--;fmt();}else{beep();switchMode();}}
 function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)();const o=a.createOscillator();a.resume?.();o.connect(a.destination);o.start();o.stop(a.currentTime+.4);}catch(e){}}
 function switchMode(){work=!work;total=work?25*60:5*60;left=total;document.getElementById('mode').textContent=work?'WORK':'BREAK';}
 go.onclick=()=>{run=!run;go.textContent=run?'⏸ Pause':'▶ Start';if(run)timer=setInterval(tick,1000);else clearInterval(timer);};
@@ -451,7 +521,7 @@ footer{text-align:center;padding:40px;color:#5f6a92}`,
 <div class="feat" id="f">
 <div class="f"><div>⚡</div><h3>Blazing Fast</h3><p>Optimized for speed at every level.</p></div>
 <div class="f"><div>🔒</div><h3>Secure</h3><p>Enterprise-grade security built in.</p></div>
-<div class="f"><div>🌍</div><h3>Global</h3><p>Available everywhere, in any language.</p></div></div>
+<div class="f"><div>🌍</div><h3>Global</h3><p>Available everywhere, instantly.</p></div></div>
 <footer>© 2026 YourBrand — made with Mega Power AI ⚡</footer>`,
 `document.querySelector('.cta').addEventListener('click',()=>alert('Welcome aboard! 🚀'));`);
 
@@ -550,10 +620,31 @@ console.log('App skeleton ready — extend me!');}
 window.go=go;`);
 };
 
-/* ---------------- image generation (free, keyless) ---------------- */
+/* ============================================================
+   IMAGE ENGINE — ChatGPT-quality results
+   • With OpenAI key → gpt-image-1 (same engine as ChatGPT)
+   • Without key → free Flux engine with professional poster
+     prompt engineering. NO watermarks, ever.
+   ============================================================ */
+Mega.ai.imageStyles = {
+  '': '',
+  poster: ', professional graphic design poster, bold headline typography, clean layout hierarchy, vivid colors, high contrast, print-quality composition, marketing flyer aesthetic, award-winning design',
+  social: ', eye-catching social media post design, modern typography, balanced composition, vibrant gradient background, professional graphic design, high engagement aesthetic',
+  realistic: ', ultra realistic photograph, 8k, detailed, professional lighting, shallow depth of field',
+  cinematic: ', cinematic film still, dramatic lighting, movie color grading, anamorphic lens, highly detailed',
+  anime: ', anime style, studio ghibli inspired, vibrant, detailed illustration',
+  '3d': ', 3d render, octane render, soft studio lighting, pixar style, high detail',
+  digital: ', digital art, concept art, trending on artstation, masterpiece',
+  cyberpunk: ', cyberpunk style, neon lights, futuristic, rain reflections, blade runner mood',
+  watercolor: ', watercolor painting, soft flowing colors, artistic paper texture',
+  minimal: ', minimal flat vector design, clean shapes, lots of negative space',
+  logo: ', flat vector logo design, simple, centered, iconic, professional branding, plain background',
+  thumbnail: ', YouTube thumbnail style, bold expressive subject, bright colors, high contrast, clickbait energy, professional'
+};
+
 Mega.ai.image = (() => {
   const queue = []; let running = false; let lastAt = 0;
-  const GAP = 2600; // gentle spacing for the free tier
+  const GAP = 2500;
   const run = async () => {
     if (running) return; running = true;
     while (queue.length) {
@@ -563,9 +654,9 @@ Mega.ai.image = (() => {
       lastAt = Date.now();
       let ok = false;
       for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-        if (job.signal && job.signal.aborted) { job.reject(new DOMException('aborted', 'AbortError')); break; }
-        ok = await job.load(job.seed + attempt * 7919);
-        if (!ok) await Mega.sleep(2200 + attempt * 2400);
+        if (job.signal && job.signal.aborted) break;
+        ok = await job.load(attempt);
+        if (!ok) await Mega.sleep(2000 + attempt * 2200);
       }
       queue.shift();
       if (!ok && !(job.signal && job.signal.aborted)) job.reject(new Error('image-failed'));
@@ -573,48 +664,103 @@ Mega.ai.image = (() => {
     running = false;
   };
   return {
-    /* Returns Promise<HTMLImageElement> for a pollinations image */
-    get(prompt, opts = {}) {
+    /* engine choice: key-based (OpenAI gpt-image-1) or free Flux */
+    engine() {
+      const pref = Mega.settings.imageEngine || 'auto';
+      if (pref === 'free') return 'free';
+      if (pref === 'openai') return 'openai';
+      return Mega.ai.hasKey('openai') ? 'openai' : 'free';
+    },
+    async get(prompt, opts = {}) {
+      const engine = opts.engine || Mega.ai.image.engine();
+      if (engine === 'openai' && Mega.ai.hasKey('openai')) {
+        return Mega.ai.openaiImage(prompt, opts);
+      }
       return new Promise((resolve, reject) => {
         const seed = opts.seed ?? Math.floor(Math.random() * 1e9);
-        const styleMap = {
-          realistic: ', ultra realistic, photograph, 8k, detailed',
-          anime: ', anime style, studio ghibli, vibrant',
-          '3d': ', 3d render, octane, soft lighting, pixar style',
-          digital: ', digital art, concept art, trending on artstation',
-          cyberpunk: ', cyberpunk style, neon lights, futuristic',
-          watercolor: ', watercolor painting, soft colors',
-          minimal: ', minimal flat vector, clean shapes',
-          logo: ', flat vector logo, simple, centered, white background'
-        };
-        const p = prompt + (styleMap[opts.style] || '');
-        const w = opts.width || 1024, h = opts.height || 1024;
-        const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) +
-          `?width=${w}&height=${h}&seed=${seed}&nologo=true&model=${opts.model || 'flux'}&referrer=megapowerai` +
-          (opts.enhance ? '&enhance=true' : '');
-        const load = (trySeed) => new Promise((res) => {
+        const style = opts.style !== undefined ? opts.style : (Mega.settings.imageStyle ?? 'realistic');
+        const p = prompt + (Mega.ai.imageStyles[style] ?? '');
+        const [w, h] = Mega.ai.imageSize(opts.size || Mega.settings.imageSize || '1:1');
+        const load = (attempt) => new Promise((res) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          const u = trySeed === seed ? url : url.replace(/seed=\d+/, 'seed=' + trySeed);
+          const s = seed + attempt * 7919;
+          const u = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p) +
+            `?width=${w}&height=${h}&seed=${s}&nologo=true&model=flux&enhance=true&referrer=megapowerai`;
           let done = false;
-          const finish = (v) => { if (done) return; done = true; clearTimeout(t); if (v) job.resolve(img); res(v); };
+          const finish = (v) => { if (done) return; done = true; clearTimeout(t); if (v) resolve(img); res(v); };
           const t = setTimeout(() => finish(false), 90000);
           img.onload = () => finish(true);
           img.onerror = () => finish(false);
           img.src = u;
         });
-        const job = { load, seed, signal: opts.signal, resolve, reject };
+        const job = { load, signal: opts.signal, resolve, reject };
         queue.push(job);
         run().catch(() => {});
       });
     },
     url(prompt, opts = {}) {
-      const seed = opts.seed ?? Math.floor(Math.random() * 1e9);
-      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) +
-        `?width=${opts.width || 1024}&height=${opts.height || 1024}&seed=${seed}&nologo=true&model=${opts.model || 'flux'}&referrer=megapowerai`;
+      const style = opts.style !== undefined ? opts.style : (Mega.settings.imageStyle ?? 'realistic');
+      const [w, h] = Mega.ai.imageSize(opts.size || '1:1');
+      return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + (Mega.ai.imageStyles[style] ?? '')) +
+        `?width=${w}&height=${h}&seed=${opts.seed ?? Math.floor(Math.random() * 1e9)}&nologo=true&model=flux&enhance=true&referrer=megapowerai`;
     }
   };
 })();
+
+Mega.ai.imageSize = (ratio) => {
+  const map = { '1:1': [1024, 1024], '16:9': [1280, 720], '9:16': [720, 1280], '4:3': [1152, 864], '3:4': [864, 1152] };
+  return map[ratio] || map['1:1'];
+};
+
+/* OpenAI image generation — the same engine family ChatGPT uses */
+Mega.ai.openaiImage = async (prompt, opts = {}) => {
+  const key = Mega.settings.keys.openai;
+  const [w, h] = Mega.ai.imageSize(opts.size || Mega.settings.imageSize || '1:1');
+  const size = w === h ? '1024x1024' : (w > h ? '1536x1024' : '1024x1536');
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({
+      model: 'gpt-image-1',
+      prompt: prompt.slice(0, 3800),
+      size,
+      n: opts.n || 1
+    })
+  });
+  if (!res.ok) { const e = new Error('OpenAI images: HTTP ' + res.status); e.status = res.status; try { e.detail = (await res.text()).slice(0, 200); } catch {} throw e; }
+  const j = await res.json();
+  const b64 = j.data?.[0]?.b64_json;
+  if (!b64) throw new Error('OpenAI images: no image returned');
+  const url = 'data:image/png;base64,' + b64;
+  await new Promise((res2, rej2) => { const im = new Image(); im.onload = res2; im.onerror = rej2; im.src = url; });
+  return { src: url, isDataURL: true };
+};
+
+/* Image EDIT — with OpenAI key (gpt-image-1 edits) or free (flux kontext) */
+Mega.ai.editImage = async (imageUrl, prompt, opts = {}) => {
+  if (Mega.ai.hasKey('openai') && (Mega.settings.imageEngine || 'auto') !== 'free') {
+    try {
+      const blob = await (await fetch(imageUrl)).blob();
+      const fd = new FormData();
+      fd.append('model', 'gpt-image-1');
+      fd.append('prompt', prompt.slice(0, 3000));
+      fd.append('image', blob, 'image.png');
+      const res = await fetch('https://api.openai.com/v1/images/edits', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + Mega.settings.keys.openai }, body: fd
+      });
+      if (res.ok) {
+        const j = await res.json();
+        if (j.data?.[0]?.b64_json) return 'data:image/png;base64,' + j.data[0].b64_json;
+      }
+    } catch {}
+  }
+  // free: FLUX Kontext img2img via pollinations
+  const u = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + ', keep the same subject and composition, apply the requested edit') +
+    `?model=kontext&image=${encodeURIComponent(imageUrl)}&nologo=true&enhance=true&referrer=megapowerai`;
+  await new Promise((res, rej) => { const im = new Image(); im.onload = res; im.onerror = rej; im.src = u; });
+  return u;
+};
 
 /* ---------------- provider test ---------------- */
 Mega.ai.test = async (providerId) => {
@@ -631,11 +777,8 @@ Mega.ai.test = async (providerId) => {
       : providerId === 'xai' ? 'grok-3-mini'
       : providerId === 'mistral' ? 'mistral-large-latest' : 'openai';
     const msgs = [{ role: 'user', content: 'Reply with exactly: OK' }];
-    if (providerId === 'anthropic') {
-      await Mega.ai._anthropic(msgs, mdl, key, () => {}, undefined);
-    } else {
-      await Mega.ai._openaiCompat(p.base, msgs, mdl, key, !!p.keyUrl, () => {}, undefined, providerId);
-    }
+    if (providerId === 'anthropic') await Mega.ai._anthropic(msgs, mdl, key, () => {}, undefined);
+    else await Mega.ai._openaiCompat(p.base, msgs, mdl, key, () => {}, undefined, providerId);
     return { ok: true, msg: 'Connected — ' + p.name + ' is live 🚀' };
   } catch (e) {
     return { ok: false, msg: 'Failed: ' + (e.message || e) + (e.status ? ' (HTTP ' + e.status + ')' : '') };
@@ -645,14 +788,11 @@ Mega.ai.test = async (providerId) => {
 /* ---------------- parse AI code output into files ---------------- */
 Mega.ai.parseFiles = (text) => {
   const files = [];
-  // format 1: **FILE: name** + fenced block
   let re = /\*{0,2}FILE:?\s*\*{0,2}`?([\w\u00c0-\u24ff./@ -]+?)`?\*{0,2}\s*\n+```[\w+#.-]*\n([\s\S]*?)```/g;
   let m;
   while ((m = re.exec(text))) files.push({ path: m[1].trim().replace(/\*+/g, ''), content: m[2].replace(/\n$/, '') });
-  // format 2: ===FILE: name=== + raw content
   re = /={2,}\s*FILE:?\s*([\w\u00c0-\u24ff./@ -]+?)\s*={2,}\n([\s\S]*?)(?=={2,}\s*FILE:|$)/g;
   while ((m = re.exec(text))) { const p = m[1].trim(); if (!files.some(f => f.path === p)) files.push({ path: p, content: m[2].replace(/\n+$/, '') }); }
-  // fallback: bare fenced blocks → name by language
   if (!files.length) {
     const fre = /```([\w+#.-]*)\n([\s\S]*?)```/g;
     const langs = { html: 'index.html', javascript: 'script.js', js: 'script.js', css: 'style.css', python: 'main.py', json: 'data.json' };
