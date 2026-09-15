@@ -11,11 +11,11 @@ One codebase that is a **website**, an **Android app (APK + Play Store AAB)** an
 
 ## 📱 Android app — APK + Play Store
 
-**Get the built files** → GitHub **Releases** → `android-v1.1`: signed **APK** (install directly), **AAB** (upload to Google Play) and **real Play Store screenshots**. Built automatically by [GitHub Actions](.github/workflows/android.yml) with the official Android toolchain.
+**Get the built files** → GitHub **Releases** → `android-v1.2`: signed **APK** (install directly), **AAB** (upload to Google Play) and **real Play Store screenshots**. Built automatically by [GitHub Actions](.github/workflows/android.yml) with the official Android toolchain.
 
 | | |
 |---|---|
-| **Install directly (any Android 7+)** | download `Mega-Power-AI-v1.1.apk` from Releases → open it → allow "Install unknown apps" → Install ⚡ |
+| **Install directly (any Android 7+)** | download `Mega-Power-AI-v1.2.apk` from Releases → open it → allow "Install unknown apps" → Install ⚡ |
 | **Publish on Google Play** | follow **`playstore/upload-guide.md`** — step-by-step, ~1 hour. Listing copy: `playstore/store-listing.md` · Data safety answers: `playstore/data-safety.md` · Privacy policy: `privacy-policy.html` |
 | **Rebuild after changes** | push to the repo — CI rebuilds APK + AAB + screenshots automatically. Bump `versionCode` in `android/app/build.gradle` for each Play upload |
 | **Build locally** | `bash android/sync-assets.sh && cd android && gradle assembleRelease bundleRelease` (or open `android/` in Android Studio) |
@@ -52,6 +52,15 @@ python3 -m http.server 8420     # or: python -m http.server 8420
 
 ---
 
+## 🆕 What's new in v1.2
+
+- **Clean ChatGPT-style interface** — flat design, user bubbles right, plain AI answers, ＋ tools menu, voice input button
+- **🤖 Agent Mode** — I plan, use tools (web search, image generation, app building, video) and finish the whole task, showing every step live
+- **Real accounts, two distinct pages** — Log in and Sign up are separate screens; passwords are salted-hashed and verified (wrong password = rejected)
+- **Full Google sign-in flow** — account chooser → email → verify/create password. No instant login, ever
+- **Session persistence** — log in once; the app opens logged-in every time until you log out
+- **Update-proof** — network-first service worker + stale-cache purge: app updates can never leave a broken mixed version again
+
 ## ✨ One box. Everything.
 
 Type anything in the chat box — the smart router sends it to the right engine:
@@ -64,7 +73,8 @@ Type anything in the chat box — the smart router sends it to the right engine:
 | *“Make a poster of a lion, cinematic”* | ChatGPT-quality images (10+ style presets: poster, flyer, thumbnail, social…) |
 | *“Video: rocket launch at sunrise”* | real encoded video — 15/30/60s, up to 1080p, optional music, **zero watermarks** |
 | *“Animate this image”* | image-to-video with zoom / pan / rotate motion |
-| *“/help”* | commands: `/new` `/model` `/image` `/video` `/build` `/search` `/settings` |
+| 🤖 **Agent mode ON** | plan → search → generate → answer, every step shown live |
+| *“/help”* | commands: `/new` `/model` `/image` `/video` `/build` `/search` `/agent` `/settings` |
 
 ### Features
 
@@ -126,7 +136,8 @@ js/core.js            state, storage, helpers, theme, toasts, modals
 js/ai.js              AI engine: 9 providers + free + Lite + intent router + suggestions + web search
 js/md.js              zero-dependency markdown + syntax highlighter
 js/zip.js             zero-dependency ZIP writer (real archives)
-js/auth.js            animated login/signup (Google/Facebook/phone, 190+ countries)
+js/auth.js            real accounts: separate Login & Sign-up pages, full Google/Facebook flow, phone OTP, guest
+js/agent.js           Agent mode engine (plan → tools → streamed answer with steps)
 js/chat.js            the all-in-one chat engine (routing, streaming, build, images, video)
 js/code.js            static code checker + live preview + auto-fix
 js/media.js           video engine (Canvas + MediaRecorder) + speech

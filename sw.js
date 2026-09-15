@@ -1,14 +1,16 @@
 /* ============================================================
    MEGA POWER AI — service worker (offline-ready PWA)
-   App shell cached; AI APIs pass through untouched.
+   NETWORK-FIRST for the app shell: users always get the fresh
+   version after an update, cache is the offline fallback.
+   AI APIs pass through untouched. Created by Umesh Chaudhary.
    ============================================================ */
 'use strict';
-const CACHE = 'megapowerai-v2';
+const CACHE = 'megapowerai-v1.2';
 const SHELL = [
   './', './index.html', './manifest.json',
   './css/style.css',
   './js/core.js', './js/md.js', './js/zip.js', './js/ai.js', './js/auth.js',
-  './js/media.js', './js/chat.js', './js/code.js', './js/projects.js',
+  './js/media.js', './js/agent.js', './js/chat.js', './js/code.js', './js/projects.js',
   './js/github.js', './js/settings.js',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png',
   './assets/icons/apple-touch-icon.png', './assets/icons/favicon.png'
@@ -29,19 +31,14 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return; // AI APIs / images: straight to network
   if (e.request.method !== 'GET') return;
 
-  // navigation: network first, cache fallback (offline app)
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).then((r) => { caches.open(CACHE).then((c) => c.put('./index.html', r.clone())); return r; })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
-  // assets: cache first, refresh in background
+  // network first, cache fallback → app updates are never stale-mixed again
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
-      if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
-      return r;
-    }).catch(() => hit))
+    fetch(e.request)
+      .then((r) => {
+        if (r && r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
+        return r;
+      })
+      .catch(() => caches.match(e.request, { ignoreSearch: url.pathname.endsWith('/') || url.pathname.endsWith('.html') })
+        .then((hit) => hit || caches.match('./index.html')))
   );
 });

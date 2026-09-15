@@ -9,7 +9,6 @@ window.Mega = window.Mega || {};
 Mega.settingsUI = {};
 
 Mega.settingsUI.init = () => {
-  if (Mega.settingsUI._init) return; Mega.settingsUI._init = true;
   const body = Mega.$('#settingsBody');
   body.innerHTML = Mega.settingsUI.html();
   Mega.settingsUI.bind();
@@ -46,6 +45,12 @@ Mega.settingsUI.html = () => {
     <textarea class="inp" id="setSys" rows="2" placeholder="e.g. Always answer short and simple. I am a beginner.">${Mega.esc(s.sysPrompt || '')}</textarea>
     <div class="set-row"><div class="si">⚡</div><div class="grow"><div class="st">Turbo mode (4X faster streaming)</div></div><label class="switch"><input type="checkbox" id="setTurbo" ${s.turbo ? 'checked' : ''}><i></i></label></div>
     <div class="set-row"><div class="si">💡</div><div class="grow"><div class="st">Smart suggestions</div><div class="sd">Show "what next?" chips after every answer</div></div><label class="switch"><input type="checkbox" id="setSuggest" ${s.suggest !== false ? 'checked' : ''}><i></i></label></div>
+  </div>
+
+  <div class="set-item card" data-tags="agent mode autonomous tools plan search generate steps autonomous">
+    <div class="set-sec-t">🤖 Agent Mode</div>
+    <div class="set-row"><div class="si">🤖</div><div class="grow"><div class="st">Agent mode by default</div><div class="sd">Every message: I plan, use tools (web search, images, apps, videos) and finish the whole task — showing each step</div></div><label class="switch"><input type="checkbox" id="setAgent" ${s.agent ? 'checked' : ''}><i></i></label></div>
+    <p style="font-size:12px;color:var(--text3);margin-top:8px">Toggle it any time with the <b>🤖 Agent</b> chip under the chat box or the ＋ menu. Command: <code>/agent</code></p>
   </div>
 
   <div class="set-item card" data-tags="api keys openai gemini anthropic groq openrouter deepseek xai mistral token paste delete edit">
@@ -122,7 +127,7 @@ Mega.settingsUI.html = () => {
   <div class="set-item card" data-tags="account profile login signup logout user google facebook phone">
     <div class="set-sec-t">👤 Account</div>
     <div class="set-row"><div class="si">🙂</div><div class="grow"><div class="st" id="accName">${Mega.esc(Mega.user ? (Mega.user.name || 'User') : 'Guest')}</div><div class="sd" id="accEmail">${Mega.esc(Mega.user ? (Mega.user.email || '') : 'not logged in')}</div></div>
-      <button class="btn sm" id="setLogin">Log in / Sign up</button><button class="btn sm danger" id="setLogout">Log out</button></div>
+      ${Mega.user ? '<button class="btn sm danger" id="setLogout">Log out</button>' : '<button class="btn sm primary" id="setLogin">Log in</button> <button class="btn sm" id="setSignup">Sign up</button>'}</div>
   </div>
 
   <div class="set-item card" data-tags="data privacy export import backup delete clear storage">
@@ -139,7 +144,7 @@ Mega.settingsUI.html = () => {
     <div class="set-sec-t">ℹ️ About App</div>
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       <img src="assets/icons/icon-192.png" style="width:74px;height:74px;border-radius:20px;box-shadow:0 0 30px rgba(109,93,252,.5)" alt="">
-      <div><b style="font-size:16px">Mega Power AI</b> <span class="pill">v1.1</span>
+      <div><b style="font-size:16px">Mega Power AI</b> <span class="pill">v1.2</span>
         <div style="color:var(--text2);font-size:13px;margin-top:4px">Created by <b>Umesh Chaudhary</b> 👑</div>
         <div style="color:var(--text3);font-size:12px;margin-top:2px">🔒 Secret project · No limits · Free forever</div></div>
     </div>
@@ -181,6 +186,7 @@ Mega.settingsUI.bind = () => {
     if (t.id === 'setVidMusic') { s.videoMusic = t.checked; Mega.saveSettings(); }
     if (t.id === 'setTurbo') { s.turbo = t.checked; Mega.saveSettings(); }
     if (t.id === 'setSuggest') { s.suggest = t.checked; Mega.saveSettings(); }
+    if (t.id === 'setAgent') { s.agent = t.checked; Mega.saveSettings(); if (Mega.agent && Mega.agent.syncUI) Mega.agent.syncUI(); }
     if (t.id === 'setAnim') { s.anim = t.checked; Mega.saveSettings(); Mega.applyTheme(); }
   };
   body.onclick = async (e) => {
@@ -220,7 +226,8 @@ Mega.settingsUI.bind = () => {
       Mega.settingsUI.init();
       return;
     }
-    if (t.closest('#setLogin')) { Mega.drawer.close(); Mega.authOpen(); return; }
+    if (t.closest('#setLogin')) { Mega.drawer.close(); Mega.authOpen('login'); return; }
+    if (t.closest('#setSignup')) { Mega.drawer.close(); Mega.authOpen('signup'); return; }
     if (t.closest('#setLogout')) { Mega.setUser(null); Mega.toast('Logged out', 'See you soon! 👋', 'ok'); Mega.settingsUI.init(); return; }
     if (t.closest('#setExport')) return Mega.settingsUI.exportAll();
     if (t.closest('#setImport')) return Mega.settingsUI.importAll();

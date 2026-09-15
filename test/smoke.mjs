@@ -22,6 +22,8 @@ load('zip.js');
 load('ai.js');
 load('code.js');
 load('media.js');
+load('auth.js');
+load('agent.js');
 load('projects.js');
 load('chat.js');
 load('settings.js');
@@ -40,6 +42,24 @@ load('settings.js');
   const it2 = Mega.ai.intent('build me a todo app');
   t('ai: intent detects build', it2 && it2.type === 'build', JSON.stringify(it2));
   t('ai: suggest returns chips', Array.isArray(Mega.ai.suggest('What is AI?', 'text')));
+  t('agent: api surface', ['toggle','syncUI','plan','run','statusBubble','renderSteps'].every(k => typeof Mega.agent[k] === 'function'));
+  t('agent: plan always answers', Mega.agent.plan('hello there', Mega.ai.intent('hello there')).some(p => p.tool === 'answer'));
+  t('agent: plan detects search', Mega.agent.plan('search latest ai news', Mega.ai.intent('search latest ai news')).some(p => p.tool === 'search'));
+  t('agent: plan detects image', Mega.agent.plan('draw an image of a lion', Mega.ai.intent('draw an image of a lion')).some(p => p.tool === 'image'));
+  t('auth: account store api', typeof Mega.auth.createAccount === 'function' && typeof Mega.auth.verify === 'function');
+  {
+    const em = 'test@mega.ai';
+    const mk = await Mega.auth.createAccount(em, 'Test User', 'secret123', 'email');
+    t('auth: signup creates account', mk.ok === true);
+    const dup = await Mega.auth.createAccount(em, 'Test User', 'secret123', 'email');
+    t('auth: duplicate email rejected', dup.ok === false);
+    const bad = await Mega.auth.verify(em, 'wrongpass');
+    t('auth: wrong password rejected', bad.ok === false && bad.err === 'wrongpass');
+    const none = await Mega.auth.verify('ghost@mega.ai', 'x');
+    t('auth: unknown email rejected', none.ok === false && none.err === 'notfound');
+    const good = await Mega.auth.verify(em, 'secret123');
+    t('auth: correct password logs in', good.ok === true && good.user.name === 'Test User');
+  }
 }
 
 

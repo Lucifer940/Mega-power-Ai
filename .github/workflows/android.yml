@@ -50,7 +50,7 @@ jobs:
       - name: Collect build outputs
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/*.apk dist/Mega-Power-AI-v1.1.apk
+          cp android/app/build/outputs/apk/release/*.apk dist/Mega-Power-AI-v1.2.apk
           cp android/app/build/outputs/bundle/release/*.aab dist/
           ls -la dist/
 
@@ -76,7 +76,8 @@ jobs:
           shot phone-builder    "noauth=1&demo=project"
           shot phone-projects   "noauth=1&open=projects"
           shot phone-settings   "noauth=1&open=settings"
-          shot phone-login      ""
+          shot phone-login      "auth=login"
+          shot phone-signup     "auth=signup"
           kill $SRV || true
           ls -la "$GITHUB_WORKSPACE/playstore/screenshots/" || true
 
@@ -92,22 +93,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="android-v1.1"
+          TAG="android-v1.2"
           cat > /tmp/release-notes.md <<'NOTES'
-          Mega Power AI v1.1 — the all-new all-in-one AI chat. One box does everything.
+          Mega Power AI v1.2 — clean ChatGPT-style all-in-one chat + Agent mode + real accounts.
 
-          What's new:
-          - ChatGPT-style single chat: ask, search, build apps, generate images & videos — all in one box
-          - Real web search with live source links (smart / always / off modes)
-          - Smart follow-up suggestion chips after every answer
-          - ChatGPT-quality image generation: posters, flyers, thumbnails & 10+ style presets
-          - Image-to-video + prompt-to-video: 15/30/60s, up to 1080p, music, zero watermarks
-          - Full settings hub with search: models, API keys (permanent, editable), theme, accents
-          - Projects auto-saved with Run / Check / Fix / ZIP / GitHub push
-          - Understands every language, UI in English
+          What's new in v1.2:
+          - Clean ChatGPT-style interface: flat design, user bubbles, ＋ tools menu, voice input
+          - 🤖 AGENT MODE: plans, searches the web, generates images, builds apps — every step shown live
+          - Real accounts: separate Login & Sign-up pages, salted-hashed passwords, wrong password = rejected
+          - Full Google sign-in flow: account chooser → email → verify/create — never an instant login
+          - Log in once — the app opens logged-in every time (until you log out)
+          - Update-proof app: network-first service worker + stale-cache purge (no more broken updates)
+          - Everything from v1.1: one-box chat, web search with sources, suggestion chips,
+            ChatGPT-quality images, 15/30/60s watermark-free videos, 25+ models, searchable settings
 
           Files:
-          - Mega-Power-AI-v1.1.apk — install directly on any Android 7.0+ phone
+          - Mega-Power-AI-v1.2.apk — install directly on any Android 7.0+ phone
             (enable Install-unknown-apps, open the file, done)
           - app-release.aab — upload THIS file to Google Play Console, Production, Create release
           - phone-*.png — real Play Store screenshots
@@ -121,7 +122,7 @@ jobs:
           else
             gh release create "$TAG" \
               --target "$GITHUB_SHA" \
-              --title "Mega Power AI v1.1 — All-in-one AI Chat (APK + Play Store AAB)" \
+              --title "Mega Power AI v1.2 — All-in-one AI Chat + Agent Mode (APK + Play Store AAB)" \
               --notes-file /tmp/release-notes.md \
               dist/*.apk dist/*.aab
           fi

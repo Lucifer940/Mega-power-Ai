@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mega Power AI ⚡ — One box. Everything. No limits.</title>
-<meta name="description" content="Mega Power AI — one chat box that does everything: chat like ChatGPT, build apps from one prompt, professional posters & images, real videos, live web search. Created by Umesh Chaudhary.">
-<meta name="theme-color" content="#070b18">
+<meta name="description" content="Mega Power AI — one chat box that does everything: chat like ChatGPT, build apps from one prompt, professional posters & images, real videos, live web search, Agent mode. Created by Umesh Chaudhary.">
+<meta name="theme-color" content="#212121">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="assets/icons/favicon.png">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
@@ -17,8 +17,6 @@
 </head>
 <body>
 
-<div id="bgFx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="grid"></div></div>
-
 <div id="splash">
   <div class="splash-logo"><svg viewBox="0 0 96 96" width="110" height="110"><defs><linearGradient id="slg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d5dfc"/><stop offset="1" stop-color="#35e0ff"/></linearGradient></defs><rect x="4" y="4" width="88" height="88" rx="24" fill="url(#slg)"/><path d="M54 14 26 54h17l-3 28 30-42H52z" fill="#fff"/></svg></div>
   <h1>MEGA POWER AI</h1>
@@ -29,13 +27,13 @@
 <div id="app">
   <!-- ================= SIDEBAR ================= -->
   <aside id="sidebar">
-    <div class="brand" onclick="Mega.chat.newConv()">
-      <img src="assets/icons/icon-192.png" alt="">
+    <div class="brand">
+      <img src="assets/icons/icon-192.png" alt="Mega Power AI">
       <div class="bt">Mega Power AI<small>NO LIMITS ⚡</small></div>
     </div>
-    <button class="btn primary" id="chatNewBtn" style="margin:0 6px 10px">＋ New chat</button>
+    <button class="newchat-btn" id="chatNewBtn"><span id="chatNewIc"></span>New chat</button>
     <div class="nav-sec">Chats</div>
-    <div id="chatList" style="flex:1;overflow:auto;padding:0 6px;min-height:0"></div>
+    <div id="chatList" style="flex:1;overflow:auto;padding:0 8px;min-height:0"></div>
     <div class="nav-sec">Workspace</div>
     <div class="nav-item" id="navProjects"><span class="ic"></span>My Projects</div>
     <div class="nav-item" id="navSettings"><span class="ic"></span>Settings</div>
@@ -46,36 +44,39 @@
   <!-- ================= MAIN ================= -->
   <div id="main">
     <header id="topbar">
-      <button class="btn sm ghost only-m" id="chatConvBtn">☰</button>
-      <div id="tbTitle"><span class="tt">Mega Power AI</span><span class="sub">one box · everything · no limits</span></div>
+      <button class="iconbtn only-m" id="chatConvBtn" title="Menu"></button>
+      <div class="model-pick">
+        <button class="model-btn" id="modelBtn"><span class="mi" id="modelBtnIcon">M</span><span id="modelBtnName">MegaAI Core</span><span class="caret">▾</span></button>
+        <div class="model-menu" id="modelMenu">
+          <input class="mm-search" id="mmSearch" placeholder="Search models — gpt, gemini, claude…">
+          <div id="mmList"></div>
+        </div>
+      </div>
       <div class="tb-right">
         <span class="chip hide-m" id="netChip"><span class="dot"></span><span class="netl">Online</span></span>
-        <button class="btn sm ghost" id="themeQuick" title="Toggle dark / light">🌙</button>
-        <div class="model-pick">
-          <button class="model-btn" id="modelBtn"><span class="mi">M</span><span id="modelBtnName">MegaAI Core</span><span style="font-size:10px">▾</span></button>
-          <div class="model-menu" id="modelMenu">
-            <input class="mm-search" id="mmSearch" placeholder="Search models — gpt, gemini, claude…">
-            <div id="mmList"></div>
-          </div>
-        </div>
+        <button class="iconbtn" id="newChatTop" title="New chat"></button>
+        <button class="iconbtn" id="themeQuick" title="Toggle dark / light">🌙</button>
       </div>
     </header>
 
     <div id="chatWrap">
       <div id="chatMsgs"></div>
       <div class="chat-input-wrap">
+        <div class="tools-menu" id="toolsMenu"></div>
+        <div class="chat-input">
+          <button class="iconbtn" id="toolsBtn" title="Tools &amp; modes"></button>
+          <textarea id="chatInput" rows="1" placeholder="Message Mega Power AI…"></textarea>
+          <button class="iconbtn" id="micBtn" title="Voice input"></button>
+          <button class="send-btn" id="chatSend" title="Send"></button>
+        </div>
         <div class="row" id="cmdChips">
           <button class="chipbtn" data-cmd="/image ">🖼 Image</button>
           <button class="chipbtn" data-cmd="/video ">🎬 Video</button>
           <button class="chipbtn" data-cmd="/build ">🧑‍💻 Build</button>
           <button class="chipbtn" data-cmd="/search ">🔍 Search</button>
-          <button class="chipbtn" data-cmd="/help">✨ Help</button>
+          <button class="chipbtn" id="agentToggle">🤖 Agent: Off</button>
         </div>
-        <div class="chat-input">
-          <textarea id="chatInput" rows="1" placeholder="Ask anything… make a poster, build an app, search the web ⚡"></textarea>
-          <button class="send-btn" id="chatSend" title="Send"></button>
-        </div>
-        <div class="chat-note">Mega Power AI · free & unlimited · created by Umesh Chaudhary · Enter ↵ send · Shift+Enter newline</div>
+        <div class="chat-note">Free &amp; unlimited · created by <b>Umesh Chaudhary</b> · Enter ↵ send · Shift+Enter newline</div>
       </div>
     </div>
   </div>
@@ -123,6 +124,7 @@
 <script src="js/media.js"></script>
 <script src="js/code.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/agent.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/github.js"></script>
@@ -146,11 +148,18 @@ Mega.drawer = {
 
 /* ---------- boot wiring ---------- */
 (function(){
-  Mega.$('#navProjects').querySelector('.ic').innerHTML = Mega.icon('folder');
-  Mega.$('#navSettings').querySelector('.ic').innerHTML = Mega.icon('settings');
+  /* icons into static buttons */
+  Mega.$('#navProjects .ic').innerHTML = Mega.icon('folder');
+  Mega.$('#navSettings .ic').innerHTML = Mega.icon('settings');
+  Mega.$('#chatConvBtn').innerHTML = Mega.icon('menu');
+  Mega.$('#toolsBtn').innerHTML = Mega.icon('plus');
+  Mega.$('#micBtn').innerHTML = Mega.icon('mic');
+  Mega.$('#newChatTop').innerHTML = Mega.icon('plus');
+  Mega.$('#chatNewIc').innerHTML = Mega.icon('plus');
   Mega.$('#navProjects').onclick = () => Mega.drawer.open('projects');
   Mega.$('#navSettings').onclick = () => Mega.drawer.open('settings');
-  Mega.$$('#cmdChips .chipbtn').forEach(b => b.onclick = () => {
+  Mega.$('#newChatTop').onclick = () => Mega.chat.newConv();
+  Mega.$$('#cmdChips [data-cmd]').forEach(b => b.onclick = () => {
     const ta = Mega.$('#chatInput');
     ta.value = b.dataset.cmd;
     ta.focus();
@@ -166,11 +175,11 @@ Mega.drawer = {
   Mega.$('#sbUser').onclick = () => {
     if (Mega.user) {
       Mega.modal('🙋 ' + Mega.esc(Mega.user.name || 'User'), Mega.esc(Mega.user.email || '') + ' · signed in via ' + Mega.esc(Mega.user.via || 'unknown'),
-        `<div class="row" style="justify-content:flex-end;margin-top:16px">
-          <button class="btn" onclick="Mega.authOpen();this.closest('.modal-wrap')._close(null)">Switch account</button>
-          <button class="btn danger" onclick="Mega.setUser(null);this.closest('.modal-wrap')._close(null);Mega.toast('Logged out','See you soon! 👋','ok')">Log out</button>
+        `<div class="row" style="justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
+          <button class="btn" onclick="Mega.authOpen('login');this.closest('.modal-wrap')._close(null)">Switch account</button>
+          <button class="btn danger" onclick="Mega.setUser(null);Mega.toast('Logged out','See you soon! 👋','ok');this.closest('.modal-wrap')._close(null)">Log out</button>
         </div>`);
-    } else Mega.authOpen();
+    } else Mega.authOpen('login');
   };
   Mega.authRender();
   Mega.chat.init();
@@ -179,7 +188,7 @@ Mega.drawer = {
   Mega.uiRenderModels = function(){
     const cur = Mega.ai.modelById(Mega.settings.model);
     Mega.$('#modelBtnName').textContent = cur.name;
-    Mega.$('#modelBtn .mi').textContent = cur.emoji;
+    Mega.$('#modelBtnIcon').textContent = cur.emoji;
     const render = (f='') => {
       const groups = {};
       Mega.ai.models.filter(m => m.name.toLowerCase().includes(f) || m.group.toLowerCase().includes(f)).forEach(m => (groups[m.group] = groups[m.group] || []).push(m));
@@ -200,16 +209,19 @@ Mega.drawer = {
     Mega.$('#mmSearch').oninput = (e) => render(e.target.value.toLowerCase());
   };
   Mega.$('#modelBtn').onclick = (e) => { e.stopPropagation(); Mega.uiRenderModels(); Mega.$('#modelMenu').classList.toggle('open'); Mega.$('#mmSearch').value = ''; };
-  document.addEventListener('click', (e) => { if (!e.target.closest('.model-pick')) Mega.$('#modelMenu')?.classList.remove('open'); });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.model-pick')) Mega.$('#modelMenu')?.classList.remove('open');
+    if (!e.target.closest('.tools-menu') && !e.target.closest('#toolsBtn')) Mega.$('#toolsMenu')?.classList.remove('open');
+  });
   Mega.uiRenderModels();
 
   /* account chip sync */
   const _origSetUser = Mega.setUser;
   Mega.setUser = (u) => { _origSetUser(u); const n = Mega.$('#accName'), em = Mega.$('#accEmail');
-    if (n) { n.textContent = u ? (u.name || 'User') : 'Guest'; em.textContent = u ? (u.email || '') : 'not logged in'; } };
+    if (n) { n.textContent = u ? (u.name || 'User') : 'Not logged in'; em.textContent = u ? (u.email || '') : 'log in or create an account'; } };
 })();
 
-/* PWA */
+/* PWA + stale-cache migration (fixes broken updates) */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }

@@ -22,6 +22,45 @@ Mega.chat.init = () => {
   send.onclick = () => (Mega.chat.busy ? Mega.chat.stop() : Mega.chat.send());
   Mega.$('#chatMsgs').addEventListener('click', Mega.chat.onBubbleClick);
 
+  /* tools menu (＋ button) */
+  const tm = Mega.$('#toolsMenu');
+  if (tm) {
+    tm.innerHTML = `
+      <button class="tm-item" data-t="image"><span class="ti2">🖼</span>Generate an image</button>
+      <button class="tm-item" data-t="video"><span class="ti2">🎬</span>Create a video</button>
+      <button class="tm-item" data-t="build"><span class="ti2">🧑‍💻</span>Build an app / website</button>
+      <button class="tm-item" data-t="search"><span class="ti2">🔍</span>Search the web</button>
+      <button class="tm-item" id="tmAgent"><span class="ti2">🤖</span>Agent mode — plan &amp; use tools</button>`;
+    Mega.$$('#toolsMenu [data-t]').forEach(b => b.onclick = () => {
+      const cmd = { image: '/image ', video: '/video ', build: '/build ', search: '/search ' }[b.dataset.t];
+      tm.classList.remove('open');
+      ta.value = cmd; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    });
+    Mega.$('#tmAgent').onclick = () => { tm.classList.remove('open'); Mega.agent.toggle(); };
+    Mega.$('#toolsBtn').onclick = (e) => { e.stopPropagation(); tm.classList.toggle('open'); };
+  }
+  /* agent toggle chip */
+  const ag = Mega.$('#agentToggle');
+  if (ag) ag.onclick = () => Mega.agent.toggle();
+  if (Mega.agent.syncUI) Mega.agent.syncUI();
+
+  /* voice input (real speech recognition where supported) */
+  const mic = Mega.$('#micBtn');
+  if (mic) mic.onclick = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return Mega.toast('Voice input not supported', 'Your browser has no speech recognition — type instead.', 'warn');
+    if (mic.classList.contains('on')) return; /* already listening */
+    const rec = new SR();
+    rec.lang = navigator.language || 'en-US';
+    rec.interimResults = true;
+    mic.classList.add('on');
+    ta.placeholder = 'Listening… speak now';
+    rec.onresult = (e) => { ta.value = [...e.results].map(r => r[0].transcript).join(''); ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 170) + 'px'; };
+    rec.onend = () => { mic.classList.remove('on'); ta.placeholder = 'Message Mega Power AI…'; if (ta.value.trim()) Mega.chat.send(); };
+    rec.onerror = () => { mic.classList.remove('on'); ta.placeholder = 'Message Mega Power AI…'; Mega.toast('Voice input', 'No speech detected or mic permission denied.', 'warn'); };
+    try { rec.start(); } catch { mic.classList.remove('on'); }
+  };
+
   Mega.chat.loadList().then(() => {
     if (!Mega.chat.convs.length) Mega.chat.newConv(true);
     else { Mega.chat.active = Mega.chat.convs[0].id; Mega.chat.renderList(); Mega.chat.renderMsgs(); }
@@ -53,7 +92,7 @@ Mega.chat.renderList = () => {
     if (e.target.dataset.del) return Mega.chat.del(e.target.dataset.del);
     Mega.chat.active = n.dataset.id;
     Mega.chat.renderList(); Mega.chat.renderMsgs();
-    Mega.$('.chat-side')?.classList.remove('open');
+    Mega.$('#sidebar')?.classList.remove('open');
   });
 };
 Mega.chat.newConv = () => {
@@ -84,10 +123,10 @@ Mega.chat.renderMsgs = () => {
 Mega.chat.heroHTML = () => `
   <div class="chat-hero">
     <div class="hl">${Mega.logoSVG('hl')}</div>
-    <h2>One box. Everything.<br>What should we build? ⚡</h2>
-    <p>Type anything — I detect what you need automatically. Or pick a starter:</p>
+    <h2>How can I help you today?</h2>
+    <p>One box does everything — ask anything, or pick a starter:</p>
     <div class="sugs">
-      <div class="sug" data-q="Make a professional poster image for a coffee shop sale"><b>🪧 Design a poster</b>“Make a professional poster image for a coffee shop sale”</div>
+      <div class="sug" data-q="Make a professional poster image for a coffee shop sale"><b>🪧 Design a poster</b>“Make a professional poster for a coffee shop sale”</div>
       <div class="sug" data-q="Build a beautiful todo app with dark mode"><b>🧑‍💻 Build an app</b>“Build a beautiful todo app with dark mode”</div>
       <div class="sug" data-q="Explain how JavaScript promises work with examples"><b>📚 Learn something</b>“Explain how JavaScript promises work”</div>
       <div class="sug" data-q="Make a video of a rocket launch at sunset, then Earth from orbit"><b>🎬 Make a video</b>“Make a video of a rocket launch at sunset…”</div>
@@ -101,7 +140,7 @@ Mega.chat.heroHTML = () => `
 
 Mega.chat.msgHTML = (m, i) => {
   if (m.role === 'user') {
-    return `<div class="msg user"><div class="mav">🙋</div><div class="mbody"><div class="mname">You</div><div class="mbubble">${Mega.esc(m.content).replace(/\n/g, '<br>')}</div></div></div>`;
+    return `<div class="msg user"><div class="mbody"><div class="mbubble">${Mega.esc(m.content)}</div></div></div>`;
   }
   const mm = Mega.ai.modelById(m.model);
   const engineBadge = m.engine === 'lite' ? ' <span class="pill">LITE</span>' : '';
@@ -130,7 +169,7 @@ Mega.chat.msgHTML = (m, i) => {
   } else if (m.kind === 'project') {
     const files = m.meta.files || [];
     body = `<div class="mbubble">
-      <div class="card" style="padding:14px;background:rgba(109,93,252,.07);border-color:rgba(109,93,252,.3)">
+      <div class="card" style="padding:14px;background:rgba(109,93,252,.06);border-color:rgba(109,93,252,.3)">
         <div class="row"><b>📦 ${Mega.esc(m.meta.name || 'project')}</b><span class="pill" style="margin-left:auto">${files.length} files</span></div>
         <div style="font-family:var(--mono);font-size:11.5px;color:var(--text2);margin-top:8px;line-height:1.8">${files.map(f => '📄 ' + Mega.esc(f.path)).join('<br>')}</div>
         <div class="row" style="margin-top:12px;gap:7px;flex-wrap:wrap">
@@ -144,24 +183,38 @@ Mega.chat.msgHTML = (m, i) => {
       </div></div>`;
   } else if (m.kind === 'help') {
     body = `<div class="mbubble md">${Mega.md.render(m.content, { fixable: false })}</div>`;
+  } else if (m.kind === 'agent') {
+    const steps = m.meta.steps || [];
+    const imgs = m.meta.images || [];
+    body = `<div class="mbubble">
+      ${steps.length ? `<div class="agent-steps">${steps.map(s => `<div class="astep ${s.state === 'fail' ? 'fail' : 'done'}"><span class="asi">${s.state === 'fail' ? '✕' : '✓'}</span><span>${Mega.esc(s.label)}${s.note ? ` <span class="as-note">— ${Mega.esc(s.note)}</span>` : ''}</span></div>`).join('')}</div>` : ''}
+      <div class="md">${Mega.md.render(m.content)}</div>
+      ${imgs.length ? `<div class="chat-img-grid" style="margin-top:12px">${imgs.map(u => `
+        <div class="img-card"><img src="${Mega.esc(u)}" data-full="${Mega.esc(u)}" alt="AI image">
+        <div class="img-acts">
+          <button class="btn sm" data-a="img-dl" data-u="${Mega.esc(u)}">⬇️</button>
+          <button class="btn sm" data-a="img-video" data-i="${i}" data-j="0">🎬 Video</button>
+        </div></div>`).join('')}</div>` : ''}
+      </div>
+      ${m.meta?.sources?.length ? `<div class="src-row">🔍 ${m.meta.sources.map(s => `<a class="src-chip" href="${Mega.esc(s.url)}" target="_blank" rel="noopener">${Mega.esc(s.title.slice(0, 42))}</a>`).join('')}</div>` : ''}`;
   } else {
     body = `<div class="mbubble md">${Mega.md.render(m.content)}</div>
       ${m.meta?.sources?.length ? `<div class="src-row">🔍 ${m.meta.sources.map(s => `<a class="src-chip" href="${Mega.esc(s.url)}" target="_blank" rel="noopener">${Mega.esc(s.title.slice(0, 42))}</a>`).join('')}</div>` : ''}`;
   }
   const acts = `
     <div class="macts">
-      ${m.kind === 'text' || m.kind === 'search' ? `<button class="mact" data-copy="${i}">📋 Copy</button>` : ''}
+      ${m.kind === 'text' || m.kind === 'search' || m.kind === 'agent' ? `<button class="mact" data-copy="${i}">📋 Copy</button>` : ''}
       <button class="mact" data-regen="${i}">🔁 Regenerate</button>
-      ${m.kind === 'text' || m.kind === 'search' ? `<button class="mact" data-speak="${i}">🗣 Speak</button>` : ''}
+      ${m.kind === 'text' || m.kind === 'search' || m.kind === 'agent' ? `<button class="mact" data-speak="${i}">🗣 Speak</button>` : ''}
     </div>`;
   const sugg = m.meta?.sugg?.length ? `
     <div class="sug-row">
       <span class="sug-title">💡 Next:</span>
       ${m.meta.sugg.map((s, k) => `<button class="sug-chip" data-sugg="${k}" data-i="${i}">${Mega.esc(s)}</button>`).join('')}
     </div>` : '';
-  return `<div class="msg bot"><div class="mav">⚡</div><div class="mbody">
-    <div class="mname">Mega Power AI · ${Mega.esc(mm.name)}${engineBadge}</div>
-    ${body}${acts}${sugg}</div></div>`;
+  return `<div class="msg bot">
+    <div class="mhead"><div class="mav">⚡</div><div class="mname">Mega Power AI <span class="mm-sub">· ${Mega.esc(mm.name)}${engineBadge}</span></div></div>
+    <div class="mbody">${body}${acts}${sugg}</div></div>`;
 };
 
 Mega.chat.bindMsgActs = () => {
@@ -228,11 +281,13 @@ Mega.chat.send = async (override) => {
   if (!c.title) { c.title = raw.slice(0, 42) + (raw.length > 42 ? '…' : ''); Mega.chat.renderList(); }
   c.msgs.push({ role: 'user', content: raw });
   Mega.chat.renderMsgs();
-  await Mega.chat.route(raw);
+  if (Mega.settings.agent && Mega.agent && Mega.agent.run) await Mega.agent.run(raw);
+  else await Mega.chat.route(raw);
   Mega.chat.persist();
 };
 
 Mega.chat.route = async (raw) => {
+  if (/^\/agent\b/i.test(raw)) { Mega.agent.toggle(); return; }
   const it = Mega.ai.intent(raw);
   try {
     switch (it.type) {
@@ -265,11 +320,12 @@ Just type naturally and I detect what you want:
 | *"turn this image into a video"* | 🎞 Animate the image (zoom / pan / rotate) |
 | *"build a snake game"* | 🧑‍💻 Generate the full project — Run, Check, Fix, ZIP, push to GitHub |
 | *"search latest AI news"* | 🔍 Live web search with sources |
+| 🤖 **Agent mode ON** | I plan, search, generate images & finish the whole task step by step |
 | anything else | 💬 Stream a smart answer like ChatGPT |
 
-**Slash commands:** \`/image\` \`/video\` \`/build\` \`/search\` \`/model\` \`/settings\` \`/new\` \`/help\`
+**Slash commands:** \`/image\` \`/video\` \`/build\` \`/search\` \`/agent\` \`/model\` \`/settings\` \`/new\` \`/help\`
 
-⚙️ **Settings** (gear, top right) has everything: API keys, models, web search, image & video options, theme, data, about.`;
+⚙️ **Settings** (sidebar → Settings) has everything: Agent mode, API keys, models, web search, image & video options, theme, account, data, about.`;
   c.msgs.push({ role: 'assistant', kind: 'help', content: md, model: Mega.settings.model, engine: 'builtin' });
   Mega.chat.renderMsgs(); Mega.chat.persist();
 };
@@ -291,9 +347,10 @@ Mega.chat.status = (html) => {
   if (!el) {
     el = document.createElement('div');
     el.id = 'chatStatus'; el.className = 'msg bot';
-    el.innerHTML = `<div class="mav">⚡</div><div class="mbody"><div class="mname">Mega Power AI</div><div class="mbubble" id="chatStatusB"></div></div>`;
     box.appendChild(el);
   }
+  el.innerHTML = `<div class="mhead"><div class="mav">⚡</div><div class="mname">Mega Power AI</div></div>
+    <div class="mbody"><div class="mbubble" id="chatStatusB"></div></div>`;
   Mega.$('#chatStatusB').innerHTML = html;
   box.scrollTop = box.scrollHeight;
   return Mega.$('#chatStatusB');
@@ -342,7 +399,7 @@ Mega.chat.streamInto = async (msgs, o = {}) => {
     acc = r.text;
     Mega.chat.statusEnd();
     const sugg = Mega.settings.suggest !== false ? Mega.ai.suggest(o.kind || 'text', acc, o.meta) : null;
-    c.msgs.push({ role: 'assistant', kind: o.kind || 'text', content: acc, model: o.model || Mega.settings.model, engine: r.engine, meta: { sources: o.sources, sugg } });
+    c.msgs.push({ role: 'assistant', kind: o.kind || 'text', content: acc, model: o.model || Mega.settings.model, engine: r.engine, meta: Object.assign({ sources: o.sources }, o.meta || {}, { sugg }) });
     Mega.chat.lastCtx = { kind: o.kind, text: acc };
     Mega.chat.renderMsgs();
   } catch (err) {
@@ -562,6 +619,13 @@ Mega.chat.regen = async (i) => {
   const c = Mega.chat.getConv();
   const m = c.msgs[i]; if (!m) return;
   if (m.kind === 'image') return Mega.chat.rerollImage(i);
+  if (m.kind === 'agent') {
+    const wasAgent = m.meta?.agent;
+    c.msgs = c.msgs.slice(0, i); Mega.chat.renderMsgs();
+    let u = i - 1; while (u >= 0 && c.msgs[u]?.role !== 'user') u--;
+    const q = u >= 0 ? c.msgs[u].content : m.content;
+    return wasAgent && Mega.agent ? Mega.agent.run(q) : Mega.chat.route(q);
+  }
   if (m.kind === 'project') { c.msgs = c.msgs.slice(0, i); Mega.chat.renderMsgs(); return Mega.chat.handleBuild(m.meta ? m.meta.prompt || m.content : m.content); }
   if (m.kind === 'video') { c.msgs = c.msgs.slice(0, i); Mega.chat.renderMsgs(); return Mega.chat.handleVideo(m.content); }
   // text/search: find the user message before it
@@ -595,7 +659,7 @@ Mega.chat.runSuggestion = (i, k) => {
     if (L.includes('run')) return Mega.chat.openPreview(m.meta);
     if (L.includes('check')) return Mega.chat.checkProject(i);
     if (L.includes('fix')) return Mega.chat.fixProject(i);
-    if (L.includes('zip') || L.includes('download')) return Mega.chat.onBubbleClick({ target: null }) || Mega.zip.save(Mega.zip.create(m.meta.files.map(f => ({ path: f.path, data: f.content }))), m.meta.name + '.zip');
+    if (L.includes('zip') || L.includes('download')) { Mega.zip.save(Mega.zip.create(m.meta.files.map(f => ({ path: f.path, data: f.content }))), m.meta.name + '.zip'); return Mega.toast('Download started 📦', '', 'ok'); }
     if (L.includes('github')) return Mega.github.pushDialog(m.meta.name, m.meta.files);
     if (L.includes('redesign')) { const p = m.meta.prompt || m.content; return Mega.chat.handleBuild(p + ' — redesign with a fresh modern UI'); }
   }

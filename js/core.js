@@ -67,6 +67,7 @@ Mega.settings = Object.assign({
   sysPrompt: '',
   turbo: true,
   suggest: true,
+  agent: false,
   keys: {},
   searchMode: 'smart',            // smart | always | off
   imageEngine: 'auto',            // auto | free | openai
@@ -84,6 +85,7 @@ Mega.settings = Object.assign({
   ghToken: ''
 }, Mega.store.get('settings', {}));
 Mega.saveSettings = () => Mega.store.set('settings', Mega.settings);
+Mega.VERSION = '1.2';
 
 Mega.applyTheme = () => {
   document.documentElement.dataset.theme = Mega.settings.theme;
@@ -181,13 +183,33 @@ Mega.user = Mega.store.get('user', null);
 Mega.setUser = (u) => { Mega.user = u; Mega.store.set('user', u); if (Mega.authRender) Mega.authRender(); };
 
 /* ---------------- boot (single chat app) ---------------- */
+/* purge any stale caches from a previous app version — prevents
+   a mixed old-JS/new-HTML broken state after an app update */
+Mega.purgeStale = async () => {
+  if (Mega.store.get('ver') === Mega.VERSION) return;
+  Mega.store.set('ver', Mega.VERSION);
+  try {
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    const regs = await navigator.serviceWorker?.getRegistrations?.();
+    if (regs && regs.length) await Promise.all(regs.map(r => r.unregister()));
+  } catch {}
+};
+
 Mega.boot = () => {
   Mega.applyTheme();
   Mega.setOnline();
+  Mega.purgeStale();
   const app = Mega.$('#app'); if (app) app.classList.add('ready');
   setTimeout(() => Mega.$('#splash')?.classList.add('hide'), 1750);
-  const noAuth = new URLSearchParams(location.search).has('noauth');
-  if (noAuth) Mega.store.set('seenAuth', true);
-  if (!Mega.user && !noAuth) setTimeout(() => { if (!Mega.store.get('seenAuth')) Mega.authOpen(); }, 2200);
+  const P = new URLSearchParams(location.search);
+  if (P.has('noauth')) Mega.store.set('seenAuth', true);
+  if (P.get('auth') === 'signup' || P.get('auth') === 'login') {
+    setTimeout(() => { if (!Mega.user) Mega.authOpen(P.get('auth')); }, 500);
+  } else if (!Mega.user && !P.has('noauth')) {
+    setTimeout(() => { if (!Mega.store.get('seenAuth')) Mega.authOpen('login'); }, 2200);
+  }
 };
 document.addEventListener('DOMContentLoaded', Mega.boot);
