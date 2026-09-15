@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Mega Power AI bolt, centered in the adaptive-icon safe zone -->
+    <group
+        android:scaleX="0.58"
+        android:scaleY="0.58"
+        android:translateX="20.16"
+        android:translateY="20.16">
+        <path
+            android:fillColor="#6D5DFC"
+            android:pathData="M54,10 L22,54 h17 l-3,32 34,-46 H52 Z" />
+        <path
+            android:fillColor="#35E0FF"
+            android:pathData="M54,10 L22,54 h17 l-3,32 Z" />
+    </group>
+</vector>

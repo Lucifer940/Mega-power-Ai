@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.umeshchaudhary.megapowerai'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.umeshchaudhary.megapowerai"
+        minSdk 24
+        targetSdk 35
+        versionCode 3
+        versionName "1.2"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../mega-power-ai-release.jks')
+            storePassword 'MegaPowerAI2026'
+            keyAlias 'megapowerai'
+            keyPassword 'MegaPowerAI2026'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix '.debug'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // WebViewAssetLoader serves the bundled web app on a proper https origin
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
